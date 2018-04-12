@@ -1,0 +1,181 @@
+ 
+Incorporated Research Institutions for Seismology (IRIS)
+Data Management Center (DMC)
+Data Products Team
+IRIS Earth Model Collaboration (EMC) - ParaView support bundle
+
+COMMENTS/QUESTIONS:
+
+    Please contact manoch@iris.washington.edu
+
+
+ 2018-03-21
+======================================================================================================================================================================
+
+ DESCRIPTION:
+
+ This bundles provides a set of Python programmable filters/sources to allow ParaView open-source, multi-platform data analysis and 
+ visualization application to display EMC netCDF models along with other auxiliary Earth data. Once this bundle is installed, 
+ the EMC plugins will appear in ParaView under the "Sources --> IRIS EMC" and "Filters --> IRIS EMC" menus. For information on the contents of this 
+ bundle see the CONTENTS section below. 
+
+ NOTE: To use these plugins, you need basic familiarity with ParaView and how it operates. Please see ParaView Getting Started Guide and ParaView 
+       Tutorial at https://www.paraview.org/download/.
+
+
+ REQUIREMENTS:
+
+       - ParaView: This bundle was created and tested using ParaView 5.5.0 under Mac OS X 10.13.3. ParaView can be downloaded from https://www.paraview.org/. 
+
+       - Python: ParaView comes with its own Python 2.7.10 and as such Python 2 installation is needed to support installation of this package. This bundle was created 
+         and tested under Python 2.7.13. 
+
+       NOTE: This package works with ParaView under macOS and Linux. ParaView under Windows is NOT supported as its Python does not include the needed scipy and ssl modules.
+
+
+ BUNDLE INSTALLATION:
+   
+    - Place the bundle where you want to install and unzip and untar the package. The content of packages will be installed under the "IRIS_EMC_Paraview" 
+      directory. Under this directory the src, src/filters, src/macros and  src/readers directories and their contents are required for installation and will be 
+      created during unpacking. Other needed directories will be created by the script during the build process.
+
+      NOTE: This bundle will NOT create directories outside the IRIS_EMC_Paraview installation directory.
+      NOTE: As stated above, this bundle uses Python 2 for installation
+
+    - Install the bundle by executing the Python script "build_plugins_macros.py" under the src directory.
+
+    If the "build_plugins_macros.py" execution was successful, you should see three new directories under the "IRIS_EMC_Paraview" directory:
+
+    	plugins - Under this directory you will find a series of XML files that are wrappers for the Python plugin scripts that reside under src/filters
+                and src/readers directories
+    	macros - Under this directory you will find macros that are created based on the macro templates under src/macros
+    	data - This directory does not contain any data files after the installation step, but will be used to save data files as they are downloaded during ParaView runs.
+ 
+ ADDING PLUGINS TO PARAVIEW:
+    - In ParaView go to "Tools --> Manage Plugins.." and a Plugin Manager window opens. As you see from this window, you have two options:
+           * Option 1: Click on the "Load New" button and change the file type to xml and load plugins from the IRIS_EMC_Paraview/plugins directory.
+                       These plugins will remain active during this ParaView session but you have to reload them after each ParaView restart
+
+           * Option 2: As indicated on top of the Plugin Manager window, you may place your plugin files under the designated plugin directory so they would
+                       be loaded automatically. A better option would be to make the designated plugin directory a soft symbolic link of your plugin directory:
+
+                       ln -s {FULL PATH TOIRIS_EMC_Paraview}/plugins {FULL PATH TO PARAVIEW APPLICATION DIRECTORY}/Contents/MacOS/plugins
+                       
+                       then restart ParaView
+
+    - In ParaView go to "Sources --> IRIS EMC" to see various EMC sources you have installed
+    - In ParaView go to "Filters--> IRIS EMC" to see the single EMC filter you have installed (it should be grayed out since you have no data to filter yet!)
+
+
+ USAGE:
+
+ IRIS EMC plugin installation is now complete and you may now start using them as described in README.txt document of this package.
+
+
+CONTENTS:
+
+The package comes with the following directories and files:
+
+
+IRIS_EMC_Paraview/src:
+----------------------
+   Directory of all the installation scripts and plugin/macro scripts
+
+
+- src/IrisEMC_Paraview_Lib.py
+    IRIS EMC ParaView support Python library of functions called by the plugins
+
+- src/IrisEMC_Paraview_Param.py
+    IRIS EMC ParaView support Python parameter file that contains parameters accessed by the plugins
+    User may change these parameters to change the default startup values.
+
+- src/IrisEMC_Paraview_Utils.py
+    IRIS EMC ParaView support Python library of utility functions called by the plugins
+
+- src/build_plugins_macros.py
+    A Python script to build the bundle. Anytime user modifies any of the python scripts, this script must be executed to update the plugins and macros
+
+- src/python_filter_generator.py
+   A python script to wrap the existing Python scripts into an XML plugin
+
+- src/python_macro_generator.py
+   A python script to prepare Python macros for installation
+
+
+
+IRIS_EMC_Paraview/src/filters:
+------------------------------
+   Directory of the programmable filters
+
+- filter_view_coordinates.py
+   a programmable filter to display boundary coordinate information of the input in terms of lat, lon, depth
+
+
+IRIS_EMC_Paraview/src/macros:
+-----------------------------
+   Directory of macro templates. These Python scripts are based on the programmable filters and sources that are 
+   designed to handle some specific tasks, such as plotting earthquakes using proper symbol type, size and color.
+
+- macro_coastlines.py
+   Draw low-resolution coastline on Americas and draw the state boundaries for US and Canada along with political boundaries
+
+- macro_convert_coordinates.py
+   A convenient tool to convert between model latitude, longitude and depth to Paraview Cartesian coordinates X, Y and Z.
+
+- macro_earthquakes.py
+   Plot the 200 largest earthquakes in the Americas since 2001-01-01 using USGS event service
+
+- macro_etopo5.py
+   Display surface elevation changes for Americas, using ETOPO5 elevation data file
+
+- macro_grids.py
+   Display latitude/longitude grids for Americas at 10 degrees intervals
+
+- macro_plates.py
+   Display divergent, transform and convergent plate boundaries for Americas
+
+- macro_usgs_slabs.py
+   Display USGS Slab 1.0 model for Central America from earthquake.usgs.gov 
+
+- macro_volcanoes.py
+   Display volcano locations using WOVOdat data from geows.ds.iris.edu 
+
+
+IRIS_EMC_Paraview/src/readers:
+------------------------------
+  Directory of the programmable sources
+
+- read_boundaries.py
+   Draw boundaries by reading a selected boundary file based on the lat,lon limits
+
+- read_coordinates_converter.py
+   Convers latitude, longitude and ,depth to X, Y and Z (Or Vice Versa)
+
+- read_earthquakes.py
+   Get and display earthquake locations from USGS
+
+- read_etopo5.py
+   Read and display surface elevation changes, using ETOPO5 elevation data file
+
+- read_grids.py
+   Draw the latitude and longitude grid lines
+
+
+- read_models.py
+   Read and display netCDF Earth models
+
+- read_usgs_slab.py
+   Get/Read and display USGS Slab 1.0 models
+
+- read_volcanoes.py
+   Read and display volcano locations
+
+ HISTORY
+    - 2018-03-21: initial release R.0.2018.080
+ 
+ COMMENTS/QUESTIONS:
+
+    Please contact manoch@iris.washington.edu
+
+
+

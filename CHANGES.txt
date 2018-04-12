@@ -1,0 +1,106 @@
+
+Incorporated Research Institutions for Seismology (IRIS)
+Data Management Center (DMC)
+Data Products Team
+IRIS Earth Model Collaboration (EMC) - ParaView support bundle
+
+COMMENTS/QUESTIONS:
+
+    Please contact manoch@iris.washington.edu
+
+
+=========================================================
+2018-03-21
+=========================================================
+
+IRIS_EMC_Paraview/src:
+
+src/IrisEMC_Paraview_Lib.py
+    2018-03-21 Manoch: R.0.2018.080 release
+
+src/IrisEMC_Paraview_Param.py
+    2018-03-21 Manoch: R.0.2018.080 release
+
+src/IrisEMC_Paraview_Utils.py
+    2018-03-21 Manoch: R.0.2018.080 release for ParaView support
+    2015-06-08 Manoch: updated the parameter file message based on the changes
+               in the main script
+    2015-01-17 Manoch: created
+
+src/build_plugins_macros.py
+     2018-03-21 Manoch:  R.0.2018.080
+
+src/python_filter_generator.py
+   2018-03-21 Manoch: R.0.2018.080
+   2018-02-28 Manoch: adopted to EMC ParaView support and added option of replacing keyword in the XML body before writing it to the file
+   2018-01-20 Manoch: original code by Bane Sullivan from https://github.com/banesullivan/ParaViewGeophysics
+
+src/python_macro_generator.py
+   2018-03-21 Manoch: R.0.2018.080
+   2018-03-02 Manoch: created
+
+---------------------------------------------------------
+
+IRIS_EMC_Paraview/src/filters:
+
+filter_view_coordinates.py
+   2018-03-21 Manoch: R.0.2018.080
+
+---------------------------------------------------------
+
+IRIS_EMC_Paraview/src/macros:
+
+macro_coastlines.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_convert_coordinates.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_earthquakes.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_etopo5.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_grids.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_plates.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_usgs_slabs.py
+   2018-03-21 Manoch: R.0.2018.080
+
+macro_volcanoes.py
+   2018-03-21 Manoch: R.0.2018.080
+
+---------------------------------------------------------
+
+IRIS_EMC_Paraview/src/readers:
+
+read_boundaries.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_earhquakes.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_etopo5.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_grids.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_llz-xyz.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_models.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_usgs_slab.py
+   2018-03-21 Manoch: R.0.2018.080
+
+read_volcanoes.py
+   2018-03-21 Manoch: R.0.2018.080
+
+ 
+
