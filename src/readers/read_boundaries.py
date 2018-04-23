@@ -9,7 +9,7 @@ ExtraXml = '''\
     command="SetParameter"
     number_of_elements="1"
     initial_string="boundary_drop_down_menu"
-    default_values="1">
+    default_values="2">
     <EnumerationDomain name="enum">
           BOUNDARY_DROP_DOWN
     </EnumerationDomain>
@@ -42,7 +42,7 @@ Properties = dict(
     Longitude_Begin    = '',
     Longitude_End      = '',
     Boundary_Elevation = 10,
-    DataFile      = 1
+    DataFile      = 2
 )
 
 def RequestData():
