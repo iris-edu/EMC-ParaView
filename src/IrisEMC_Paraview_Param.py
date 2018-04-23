@@ -27,6 +27,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-04-23 Manoch: R.0.2018.113 updateid lat and lon limits for the world
+#                       added verly low resolution coastline data file
 #    2018-03-21 Manoch: R.0.2018.080 release
 #
 #
@@ -205,7 +207,7 @@ areaRangeDict = {'0':{'lat':(-35.,40.),'lon':(-20,55)},
                  '6':{'lat':(-60.,20.),'lon':(-85.,-30)},
                  '7':{'lat':(21.5,25.5),'lon':(120.0,122.5)},
                  '8':{'lat':(25.,57.),'lon':(-125.,-66.5)},
-                 '9':{'lat':(-85.,85.),'lon':(-178.,180.)}}
+                 '9':{'lat':(-90.,90.),'lon':(-180.,180.)}}
 
 ################################################################################################
 #
