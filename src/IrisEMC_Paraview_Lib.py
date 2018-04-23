@@ -27,6 +27,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-04-23 Manoch: R.0.2018.113 update lat and lon loops logic to avoid gaps at region 
+#                       boundaries due to selected step (inc)
 #    2018-03-21 Manoch: R.0.2018.080 release
 #
 #
@@ -778,9 +780,17 @@ def read_netCdfEarthModel(modelFile,latVariable,lonVariable,depthVariable,LL,UR,
    latitude  = []
    longitude = []
    depth2    = []
-   for i in range(0,len(lon),inc):
+   lastI     = -1
+   for i in range(len(lon)):
+      if i != 0 and i != len(lon)-1 and i != lastI+inc:
+             continue
+      lastI = i 
       for j in range(len(depth)):
-         for k in range(0,len(lat),inc):
+         lastK = -1
+         for k in range(len(lat)):
+            if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                  continue
+            lastK = k
             if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]) and utils.isValueIn(float(depth[j]), depthMin, depthMax):
               if lon[i] not in longitude:
                  longitude.append(lon[i])
@@ -814,9 +824,17 @@ def read_netCdfEarthModel(modelFile,latVariable,lonVariable,depthVariable,LL,UR,
       oldI   = -1
       oldJ   = -1
       oldK   = -1
-      for i in range(0,len(lon),inc):
+      lastI  = -1
+      for i in range(len(lon)):
+         if i != 0 and i != len(lon)-1 and i != lastI+inc:
+             continue
+         lastI = i  
          for j in range(len(depth)):
-            for k in range(0,len(lat),inc):
+            lastK = -1
+            for k in range(len(lat)):
+              if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                  continue
+              lastK = k
               if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]) and utils.isValueIn(float(depth[j]), depthMin, depthMax):
                  if i != oldI:
                     meta['lon'] = [min(meta['lon'][0],lon[i]),max(meta['lon'][0],lon[i])]
@@ -935,9 +953,17 @@ def find_netCDFModelExtent(modelFile,latVariable,lonVariable,depthVariable,LL,UR
       oldI   = -1
       oldJ   = -1
       oldK   = -1
-      for i in range(0,len(lon),inc):
+      lastI  = -1
+      for i in range(len(lon)):
+         if i != 0 and i != len(lon)-1 and i != lastI+inc:
+             continue
+         lastI = i 
          for j in range(len(depth)):
-            for k in range(0,len(lat),inc):
+            lastK = -1
+            for k in range(len(lat)):
+              if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                  continue
+              lastK = k
               if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]) and utils.isValueIn(float(depth[j]), depthMin, depthMax):
                  if i != oldI:
                     oldI = i
@@ -1010,13 +1036,25 @@ def readTopoFile(modelFile,LL,UR,inc):
    depth2    = [0]
    latitude  = []
    longitude = []
-   for i in range(0,len(lon),inc):
-         for k in range(0,len(lat),inc):
+
+   #
+   # the loop is intended to include that last lat and lon regardless of inc
+   #
+   lastI = -1
+   for i in range(len(lon)):
+         if i != 0 and i != len(lon)-1 and i != lastI+inc: 
+             continue
+         lastI = i
+         lastK = -1
+         for k in range(len(lat)):
+             if k != 0 and k != len(lat)-1 and k != lastK+inc: 
+                  continue
+             lastK = k
              if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]):
-              if lon[i] not in longitude:
-                 longitude.append(lon[i])
-              if lat[k] not in latitude:
-                 latitude.append(lat[k])
+                 if lon[i] not in longitude:
+                    longitude.append(lon[i])
+                 if lat[k] not in latitude:
+                    latitude.append(lat[k])
    #
    # model data grid definition
    #
@@ -1040,9 +1078,17 @@ def readTopoFile(modelFile,LL,UR,inc):
       oldI   = -1
       oldJ   = -1
       oldK   = -1
-      for i in range(0,len(lon),inc):
+      lastI = -1
+      for i in range(len(lon)):
+          if i != 0 and i != len(lon)-1 and i != lastI+inc:
+             continue
+          lastI = i
           for j in range(1):
-            for k in range(0,len(lat),inc):
+            lastK = -1
+            for k in range(len(lat)):
+                if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                   continue
+                lastK = k
                 if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]):
                  if i != oldI:
                     oldI = i
@@ -1120,8 +1166,16 @@ def findTopoExtent(modelFile,LL,UR,inc):
       oldI   = -1
       oldJ   = -1
       oldK   = -1
-      for i in range(0,len(lon),inc):
-            for k in range(0,len(lat),inc):
+      lastI  = -1
+      lastK  = -1
+      for i in range(len(lon)):
+            if i != 0 and i != len(lon)-1 and i != lastI+inc:
+               continue
+            lastI = i
+            for k in range(len(lat)):
+                if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                     continue
+                lastK = k
                 if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]):
                  if i != oldI:
                     oldI = i
