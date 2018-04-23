@@ -55,7 +55,6 @@ def checkPath(path):
 #
 def isValueIn(value,valueMin,valueMax):
    "check a value to see if it is within limits"
-
    if value < valueMin or value > valueMax:
        return False
    else:
