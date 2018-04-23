@@ -10,6 +10,30 @@ COMMENTS/QUESTIONS:
 
 
 =========================================================
+2018-04-23
+=========================================================
+
+IRIS_EMC_Paraview/src:
+
+src/IrisEMC_Paraview_Lib.py
+    2018-04-23 Manoch: R.0.2018.113 update lat and lon loops logic to avoid gaps at region 
+                       boundaries due to selected step (inc)
+
+src/IrisEMC_Paraview_Param.py
+    2018-04-23 Manoch: R.0.2018.113 updateid lat and lon limits for the world
+                       added verly low resolution coastline data file
+
+---------------------------------------------------------
+
+IRIS_EMC_Paraview/src/readers:
+
+read_boundaries.py
+   2018-04-23 Manoch: R.0.2018.113 made the very low resolution boundary file the default
+
+read_models.py
+   2018-04-23 Manoch: R.0.2018.113 adjusted the view port length via util.SetOutputWholeExtent
+
+=========================================================
 2018-03-21
 =========================================================
 
