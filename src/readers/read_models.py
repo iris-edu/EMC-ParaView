@@ -146,4 +146,4 @@ def RequestInformation():
     Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
     nx,ny,nz = lib.find_netCDFModelExtent(address,Latitude_Variable,Longitude_Variable,Depth_Variable,(Latitude_Begin,Longitude_Begin),(Latitude_End,Longitude_End),Depth_Begin,Depth_End,inc=Sampling)
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
-    util.SetOutputWholeExtent(self, [0,nx-1, 0,ny-1, 0,nz-1])
+    util.SetOutputWholeExtent(self, [0,nx, 0,ny, 0,nz])
