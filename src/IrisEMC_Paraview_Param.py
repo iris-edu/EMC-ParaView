@@ -28,7 +28,7 @@
 #
 # HISTORY:
 #    2018-04-23 Manoch: R.0.2018.113 updateid lat and lon limits for the world
-#                       added verly low resolution coastline data file
+#                       added very low resolution coastline data file
 #    2018-03-21 Manoch: R.0.2018.080 release
 #
 #
