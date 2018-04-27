@@ -8,6 +8,22 @@ COMMENTS/QUESTIONS:
 
     Please contact manoch@iris.washington.edu
 
+---------------------------------------------------------
+
+=========================================================
+2018-04-27
+=========================================================
+
+IRIS_EMC_Paraview/src:
+
+src/IrisEMC_Paraview_Param.py
+    2018-04-27 Manoch: R.0.2018.117 updateid irisEMC_Files_URL
+
+
+IRIS_EMC_Paraview/src/readers:
+
+read_models.py
+   2018-04-27 Manoch: R.0.2018.117 added error checking
 
 =========================================================
 2018-04-23
