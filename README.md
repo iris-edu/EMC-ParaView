@@ -9,7 +9,7 @@ COMMENTS/QUESTIONS:
     Please contact manoch@iris.washington.edu
 
 
- 2018-03-21
+ 2018-04-27
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
  DESCRIPTION:
@@ -18,7 +18,7 @@ COMMENTS/QUESTIONS:
  display EMC netCDF models along with other auxiliary Earth data.  After installing this package (see INSTALL.txt) the plugins/macros in the package allow you to:
 
     - Draw Boundaries of:
-        + low-resolution or intermediate resolution coastlines
+        + very low-resolution, low-resolution or intermediate resolution coastlines
         + national, US states and Canadian provinces 
         + present-day plates (divergent, transform or convergent margins)
         + your own GeoCSV boundary files
@@ -45,7 +45,7 @@ COMMENTS/QUESTIONS:
     - Draw grids - Draw latitude/longitude grid lines
     - NOAA ETOPO5 elevation data - Plot surface elevation changes using ETOPO5 elevation data file from https://ds.iris.edu
     - Read Earth Models - Read and plot 3D Earth models files in the netCDF file format. 
-                          The available EMC model files are available at https://ds.iris.edu/files/products/emc/data/emc-files/
+                          The available EMC model files are at https://ds.iris.edu/files/products/emc/emc-files/
                           The model descriptions are available at http://ds.iris.edu/ds/products/emc-earthmodels/
     NOTE: You do not need to download the model files. Just insert the name of the .nc file into the "FileName" property box
     - Convert latitude, longitude and ,depth to X, Y and Z (Or Vice Versa) 
