@@ -27,6 +27,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-04-27 Manoch: R.0.2018.117 updateid irisEMC_Files_URL
 #    2018-04-23 Manoch: R.0.2018.113 updateid lat and lon limits for the world
 #                       added very low resolution coastline data file
 #    2018-03-21 Manoch: R.0.2018.080 release
@@ -78,7 +79,7 @@ def sortDictByValue(thisDict):
 #
 # URLs
 #
-irisEMC_Files_URL   = "https://ds.iris.edu/files/products/emc/data/emc-files/"
+irisEMC_Files_URL   = "https://ds.iris.edu/files/products/emc/emc-files/"
 usgsEvent_URL       = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=text"
 usgsSlab_URL        = "https://earthquake.usgs.gov/static/lfs/data/slab/models/"
 
