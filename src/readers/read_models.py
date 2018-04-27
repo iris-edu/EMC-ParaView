@@ -39,7 +39,7 @@ Properties = dict(
 )
 
 def RequestData():
-    # R.0.2018.080
+    # R.0.2018.117
     import sys
     sys.path.insert(0, "EMC_SRC_PATH")
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
@@ -48,6 +48,9 @@ def RequestData():
     import os
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
+
+    if Depth_Begin > Depth_End:
+         raise Exception('Begin Depth < End Depth! Aborting.')
 
     Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
 
@@ -70,6 +73,8 @@ def RequestData():
 
     X,Y,Z,V,meta = lib.read_netCdfEarthModel(address,Latitude_Variable,Longitude_Variable,Depth_Variable,(Latitude_Begin,Longitude_Begin),(Latitude_End,Longitude_End),Depth_Begin,Depth_End,inc=Sampling) 
     nx = len(X)
+    if nx <= 0:
+        raise Exception('No data found!')
     ny = len(X[0])
     nz = len(X[0][0])
     sg.SetDimensions(nx,ny,nz)
