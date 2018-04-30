@@ -10,15 +10,20 @@ COMMENTS/QUESTIONS:
 
 ---------------------------------------------------------
 
-IRIS_EMC_Paraview/src/readers:
-
 =========================================================
 2018-04-30
 =========================================================
 
+IRIS_EMC_Paraview/src/readers:
+
 read_earthquakes.py
    2018-04-30 Manoch: R.0.2018.120 added site address to the begining of the file name
 
+---------------------------------------------------------
+
+IRIS_EMC_Paraview/src:
+
+src/IrisEMC_Paraview_Lib.py
    2018-04-30 Manoch: R.0.2018.120 modified query2fileName to accepth optional url argument
                       and add a simplified version of it to the begining of the file name
                       This would allow the code to distinguish between files created from
@@ -33,6 +38,7 @@ IRIS_EMC_Paraview/src:
 src/IrisEMC_Paraview_Param.py
     2018-04-27 Manoch: R.0.2018.117 updateid irisEMC_Files_URL
 
+---------------------------------------------------------
 
 IRIS_EMC_Paraview/src/readers:
 
