@@ -9,13 +9,14 @@ COMMENTS/QUESTIONS:
     Please contact manoch@iris.washington.edu
 
 
- 2018-04-27
+ 2018-04-30
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
  DESCRIPTION:
 
- This bundles provides a set of Python programmable filters/sources to allow ParaView open-source, multi-platform data analysis and visualization application to 
- display EMC netCDF models along with other auxiliary Earth data.  After installing this package (see INSTALL.txt) the plugins/macros in the package allow you to:
+ This bundles provides a set of Python programmable filters/sources to allow ParaView open-source, multi-platform data analysis and visualization application 
+ (on macOS® and Linux® platforms) to display EMC netCDF models along with other auxiliary Earth data.  After installing this package (see INSTALL.txt) the 
+ plugins/macros in the package will allow you to:
 
     - Draw Boundaries of:
         + very low-resolution, low-resolution or intermediate resolution coastlines
