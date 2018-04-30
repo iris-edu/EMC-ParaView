@@ -87,6 +87,8 @@ usgsSlab_URL        = "https://earthquake.usgs.gov/static/lfs/data/slab/models/"
 #
 # earthquake catalogue sources
 #
+# Note: at this time only GeoCSV format is supported for earthquake files
+#
 earthquakeCatalogDict = {'https://earthquake.usgs.gov/fdsnws/event/1/query':'USGS Earthquake Hazards Program'}
 earthquakeQuery       = "format=text&starttime=%s&minmag=%0.1f&maxmag=%0.1f&orderby=magnitude&mindepth=%0.1f&maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&limit=%0i&nodata=404"
 
