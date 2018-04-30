@@ -27,6 +27,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-04-30 Manoch: R.0.2018.120 modified query2fileName to accepth optional url argument
+#                       and add a simplified version of it to the begining of the file name.
+#                       This would allow the code to distinguish between files created from
+#                       two different sites but using the same query
 #    2018-04-23 Manoch: R.0.2018.113 update lat and lon loops logic to avoid gaps at region 
 #                       boundaries due to selected step (inc)
 #    2018-03-21 Manoch: R.0.2018.080 release
@@ -353,7 +357,7 @@ def readInfoFile(dataFile):
 # query2fileName
 #
 ################################################################################################
-def query2fileName(query):
+def query2fileName(query,url=''):
     """
     convert a query to a potential file name by removing some characters
 
@@ -367,7 +371,11 @@ def query2fileName(query):
     filename: str
        the file name without path
     """
-
+    if len(url) > 0:
+       import urlparse
+       urlinfo  = urlparse.urlparse(url)
+       site     = urlinfo[1]
+       query    = '_'.join([site,query])
     filename = query.replace("&",'').replace("=","").replace(".",'').replace("formattext","")
     filename = filename.replace("nodata404","").replace("max","").replace("min","")
     filename = filename.replace("-","")+".csv"
@@ -516,7 +524,7 @@ def findFile(address,loc,query=''):
            if isUrlValid(source):
               found,destination,origin = getFileFromUrl(source,loc,filename=os.path.join(loc,address))
         #
-        # USGS earthquakes
+        # earthquakes
         #
         elif(loc == pathDict['EMC_EARTHQUAKES_PATH']):
            source = query
