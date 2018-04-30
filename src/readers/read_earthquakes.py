@@ -52,7 +52,7 @@ Properties = dict(
 )
 
 def RequestData():
-    # R.0.2018.080
+    # R.0.2018.120
     import sys
     sys.path.insert(0, "EMC_SRC_PATH")
     import paraview.simple as simple
@@ -72,7 +72,7 @@ def RequestData():
     # make sure we have input files
     query = lib.earthquakeQuery%(Start_Time,Magnitude_Begin,Magnitude_End,Depth_Begin,Depth_End,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End,Max_Count)
     if len(Alternate_FileName) <= 0:
-        eqFile = lib.query2fileName(query)
+        eqFile = lib.query2fileName(query,url=lib.earthquakeKeys[Data_Source])
         query = '?'.join([lib.earthquakeKeys[Data_Source],query])
         fileFound,address,source = lib.findFile(eqFile,loc='EMC_EARTHQUAKES_PATH',query=query)
     else:
@@ -193,7 +193,7 @@ def RequestInformation():
     Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
     query = lib.earthquakeQuery%(Start_Time,Magnitude_Begin,Magnitude_End,Depth_Begin,Depth_End,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End,Max_Count)
     if len(Alternate_FileName) <= 0:
-        eqFile = lib.query2fileName(query)
+        eqFile = lib.query2fileName(query,url=lib.earthquakeKeys[Data_Source])
         query = '?'.join([lib.earthquakeKeys[Data_Source],query])
         fileFound,address,source = lib.findFile(eqFile,loc='EMC_EARTHQUAKES_PATH',query=query)
     else:
