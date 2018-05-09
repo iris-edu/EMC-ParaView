@@ -27,6 +27,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-05-09 Manoch: R.0.2018.129 added support for 2D netCDF files
 #    2018-04-30 Manoch: R.0.2018.120 modified query2fileName to accepth optional url argument
 #                       and add a simplified version of it to the begining of the file name.
 #                       This would allow the code to distinguish between files created from
@@ -983,6 +984,261 @@ def find_netCDFModelExtent(modelFile,latVariable,lonVariable,depthVariable,LL,UR
                  if j != oldJ:
                     oldJ = j
                     jj  +=1
+                    kk   = -1
+                    oldK = -1
+                 if k != oldK:
+                    oldK = k
+                    kk  +=1
+   return ii,jj,kk
+
+################################################################################################
+#
+# read2DnetCDFFile
+#
+################################################################################################
+def read2DnetCDFFile(modelFile,latVariable,lonVariable,variable,LL,UR,inc,setDepth=None):
+   """
+   read in a 2-D netCDF file
+
+   Parameters
+   ----------
+   modelFile: str
+      model file
+   latVar: str
+      latitude variable
+   lonVar: str
+      longitude variable
+   var: str
+      variable to plot  
+   LL: list
+      lower-left coordinate
+   UR: list
+      upper-right coordinate
+   inc: int
+      grid sampling interval
+   depth: float
+       depth to plot var at. If None, use var also as depth
+
+    Returns
+    -------
+    X: float
+       x-coordinate  normalized to the radius of Earh
+    Y: float
+       y-coordinate  normalized to the radius of Earh
+    Z: float
+       z-coordinate  normalized to the radius of Earh
+    meta: dict
+       file metadata information
+   """
+   #
+   # model data
+   # NetCDF files, when opened read-only, return arrays that refer directly to memory-mapped data on disk:
+   #
+   import numpy as np
+   from scipy.io import netcdf
+   emcdata     = netcdf.netcdf_file(modelFile, 'r')
+   variables   = []
+   for name in emcdata.variables.keys():
+       if name not in (lonVariable,latVariable):
+          variables.append(name)
+
+   #
+   # I assume all variables are defined with uniform order of latitude and longitude
+   #
+   var = variables[0]
+   for i in range(len(emcdata.variables[var].dimensions)):
+      if emcdata.variables[var].dimensions[i] == lonVariable:
+         lonIndex = i
+      else:
+         latIndex = i
+
+   lat         = emcdata.variables[latVariable][:].copy()
+   lon         = emcdata.variables[lonVariable][:].copy()
+   for i in range(len(lon)):
+      if lon[i]> 180.0: lon[i] -= 360.0;
+
+   depth       = [0,1]
+
+   #
+   # select the values within the ranges (this is to get a count only)
+   #
+   depth2    = []
+   latitude  = []
+   longitude = []
+   depth2    = []
+   lastI     = -1
+   for i in range(len(lon)):
+      if i != 0 and i != len(lon)-1 and i != lastI+inc:
+             continue
+      lastI = i 
+      for j in range(len(depth)):
+         lastK = -1
+         for k in range(len(lat)):
+            if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                  continue
+            lastK = k
+            if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]):
+              if lon[i] not in longitude:
+                 longitude.append(lon[i])
+              if depth[j] not in depth2:
+                 depth2.append(depth[j])
+              if lat[k] not in latitude:
+                 latitude.append(lat[k])
+
+   #
+   # model data grid definition
+   #
+   V  = {}
+   nx = len(longitude)
+   ny = len(depth2)
+   nz = len(latitude)
+   index     = [-1,-1,-1]
+   meta      = {'depth':[],'lat':[100,-100],'lon':[400,-400],'source':modelFile}
+   for l in range(len(variables)):
+      X      = np.zeros((nx, ny, nz))
+      Y      = np.zeros((nx, ny, nz))
+      Z      = np.zeros((nx, ny, nz))
+      v      = np.zeros((nx, ny, nz))
+      var    = variables[l]
+      emcin  = emcdata.variables[var][:].copy()
+      latitude  = []
+      longitude = []
+      depth2    = []
+      ii     = -1
+      jj     = -1
+      kk     = -1
+      oldI   = -1
+      oldJ   = -1
+      oldK   = -1
+      lastI  = -1
+      for i in range(len(lon)):
+         if i != 0 and i != len(lon)-1 and i != lastI+inc:
+             continue
+         lastI = i  
+         for j in range(len(depth)):
+            lastK = -1
+            for k in range(len(lat)):
+              if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                  continue
+              lastK = k
+              if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]):
+                 if i != oldI:
+                    meta['lon'] = [min(meta['lon'][0],lon[i]),max(meta['lon'][0],lon[i])]
+                    oldI = i
+                    ii  +=1
+                    jj   = -1
+                    oldJ = -1
+                    kk   = -1
+                    oldK = -1
+                 if j != oldJ:
+                    if depth[j] not in meta['depth']:
+                       meta['depth'].append(depth[j])
+                    oldJ = j
+                    jj  +=1
+                    kk   = -1
+                    oldK = -1
+                 if k != oldK:
+                    meta['lat'] = [min(meta['lat'][0],lat[k]),max(meta['lat'][0],lat[k])]
+                    oldK = k
+                    kk  +=1
+
+                 index[latIndex]   = k
+                 index[lonIndex]   = i
+                 thisValue = emcin[index[0]][index[1]]
+                 if thisValue <= -990 or thisValue > 9999:
+                 	thisValue = None
+                 if thisValue is None:
+                     v[ii,jj,kk] = None
+                 else:
+                     v[ii,jj,kk] = float(thisValue)
+                 if setDepth is None:
+                 	if thisValue is None:
+                 		thisDepth = 0
+                 	else:
+                 		thisDepth = float(thisValue)
+                 else:
+                 		thisDepth = float(thisValue)
+                 x,y,z = llz2xyz(lat[k],lon[i],thisDepth)
+                 X[ii,jj,kk]=x
+                 Y[ii,jj,kk]=y
+                 Z[ii,jj,kk]=z
+
+                 
+
+      V[var] = v
+   emcdata.close()
+   return X,Y,Z,V,meta
+
+
+################################################################################################
+#
+# find2DnetCDFExtent
+#
+################################################################################################
+def find2DnetCDFExtent(modelFile,latVar,lonVar,LL,UR,inc=1):
+   """
+   find the  extent of a 2-D netCDF  as the number of grid points in each direction
+
+   Parameters
+   ----------
+   modelFile: str
+      model file
+   LL: list
+      lower-left coordinate
+   UR: list
+      upper-right coordinate
+   inc: int
+      grid sampling interval
+
+   Returns
+   -------
+   ii: int
+      number of element in the x-direction
+   jj: int
+      number of element in the y-direction
+   kk: int
+      number of element in the z-direction
+   """
+   lonVariable   = lonVar
+   latVariable   = latVar
+
+   #
+   # select the values within the ranges (this is to get a count only)
+   #
+   import numpy as np
+   from scipy.io import netcdf
+   twoDnetCDFdata     = netcdf.netcdf_file(modelFile, 'r')
+   lat      = twoDnetCDFdata.variables[latVariable][:].copy()
+   lon      = twoDnetCDFdata.variables[lonVariable][:].copy()
+   for i in range(len(lon)):
+      if lon[i]> 180.0: lon[i] -= 360.0;
+   twoDnetCDFdata.close()
+
+   #
+   # model data grid definition
+   #
+   for l in range(1):
+      ii     = 0
+      jj     = 1
+      kk     = 0
+      oldI   = -1
+      oldJ   = -1
+      oldK   = -1
+      lastI  = -1
+      lastK  = -1
+      for i in range(len(lon)):
+            if i != 0 and i != len(lon)-1 and i != lastI+inc:
+               continue
+            lastI = i
+            for k in range(len(lat)):
+                if k != 0 and k != len(lat)-1 and k != lastK+inc:
+                     continue
+                lastK = k
+                if utils.isValueIn(lat[k],LL[0],UR[0]) and utils.isLongitudeIn(lon[i],LL[1],UR[1]):
+                 if i != oldI:
+                    oldI = i
+                    ii  +=1
+                    oldJ = -1
                     kk   = -1
                     oldK = -1
                  if k != oldK:
