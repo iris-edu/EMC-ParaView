@@ -145,6 +145,9 @@ IRIS_EMC_Paraview/src/readers:
 ------------------------------
   Directory of the programmable sources
 
+- read_2Dmodels.py
+   Read and display 2D netCDF Earth models
+
 - read_boundaries.py
    Draw boundaries by reading a selected boundary file based on the lat,lon limits
 
