@@ -3,6 +3,9 @@
 IRIS_EMC_Paraview/src/readers:
 ------------------------------
 
+- read_2Dmodels.py
+   Read and display 2D netCDF Earth models
+
 - read_boundaries.py
    Draw boundaries by reading a selected boundary file based on the lat,lon limits
 
@@ -17,7 +20,6 @@ IRIS_EMC_Paraview/src/readers:
 
 - read_grids.py
    Draw the latitude and longitude grid lines
-
 
 - read_models.py
    Read and display netCDF Earth models
