@@ -45,7 +45,7 @@ COMMENTS/QUESTIONS:
     - Show USGS Slab 1.0 - Display USGS Slab 1.0 models from https://earthquake.usgs.gov/data/slab/models.php
     - Draw grids - Draw latitude/longitude grid lines
     - NOAA ETOPO5 elevation data - Plot surface elevation changes using ETOPO5 elevation data file from https://ds.iris.edu
-    - Read Earth Models - Read and plot 3D Earth models files in the netCDF file format. 
+    - Read Earth Models - Read and plot 2D and 3D Earth model files in the netCDF file format. 
                           The available EMC model files are at https://ds.iris.edu/files/products/emc/emc-files/
                           The model descriptions are available at http://ds.iris.edu/ds/products/emc-earthmodels/
     NOTE: You do not need to download the model files. Just insert the name of the .nc file into the "FileName" property box
