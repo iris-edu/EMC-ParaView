@@ -27,6 +27,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-09-13 Manoch: R.0.2018.256 added support for 3D geoCSV files
 #    2018-05-09 Manoch: R.0.2018.129 added support for 2D netCDF files
 #    2018-04-30 Manoch: R.0.2018.120 modified query2fileName to accepth optional url argument
 #                       and add a simplified version of it to the begining of the file name.
@@ -242,19 +243,15 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     """
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-################################################################################################
-#
-# readGcsv
-#
-################################################################################################
-def readGcsv(fileName):
+
+def readGcsv(file_name):
     """
-    read a given GeoCSV file and output a dictionary of the header keys along with a text 
+    read a given GeoCSV file and output a dictionary of the header keys along with a text
     block of the date body
 
     Parameters
     ----------
-    fileName: str
+    file_name: str
        the GeoCSV file to read
 
     Returns
@@ -264,9 +261,9 @@ def readGcsv(fileName):
     data: str
        a text block of the body
     """
-    fp = open(fileName,'r')
+    fp = open(file_name, 'r')
     content = fp.read()
-    lines   = content.split('\n')
+    lines = content.split('\n')
     fp.close()
     params = {}
     data = []
@@ -274,25 +271,27 @@ def readGcsv(fileName):
         if len(lines[i].strip()) <= 0:
                 continue
         elif lines[i].strip()[0] == '#':
-            thisLine = lines[i].strip()[1:]
-            if len(thisLine.strip()) <= 0:
+            this_line = lines[i].strip()[1:]
+            if len(this_line.strip()) <= 0:
                 continue
-            if ':' not in thisLine:
+            if ':' not in this_line:
+                if params['latitude_column'] in this_line and params['longitude_column'] in this_line:
+                    params['header'] = this_line.strip().split(params['delimiter'])
                 continue
-            values = thisLine.split(':')
-            key    = values[0].strip().lower()
-            params[key] = thisLine.replace(key+':','').strip()
+            values = this_line.split(':')
+            key = values[0].strip().lower()
+            params[key] = this_line.replace(key+':', '').strip()
         else:
             data.append(lines[i].strip())
-    if 'latitude_column' not in params.keys(): 
+    if 'latitude_column' not in params.keys():
         params['latitude_column'] = 'latitude'
-    if 'longitude_column' not in params.keys(): 
+    if 'longitude_column' not in params.keys():
         params['longitude_column'] = 'longitude'
-    if 'elevation_column' not in params.keys(): 
+    if 'elevation_column' not in params.keys():
         params['elevation_column'] = 'elevation'
-    if 'depth_column' not in params.keys(): 
+    if 'depth_column' not in params.keys():
         params['depth_column'] = 'depth'
-    return params,data
+    return params, data
 
 
 ################################################################################################
@@ -705,6 +704,245 @@ def xyz2llz(x,y,z):
    alt     = -1 * (alt) / 1000.0  # depth as negative alt
    
    return lat,lon,alt
+
+
+def get_column(matrix, column_index):
+    """Read in a matrix and return a selected column.
+
+    Keyword arguments:
+    matrix -- the matrix to process
+    column_index -- index of the column to extract
+
+    Return values:
+    list of values in column_index of matrix
+     """
+    return [row[column_index] for row in matrix]
+
+
+def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc):
+    """Read in a 3-D Earth model in the GeoCSV format.
+
+      Keyword arguments:
+      model_file -- model file
+      ll -- lower-left coordinate
+      ur -- upper-right coordinate
+      depth_min -- minimum depth
+      depth_max -- maximum depth
+      inc -- grid sampling interval
+
+      Return values:
+      x -- x-coordinate  normalized to the radius of the Earth
+      y -- y-coordinate  normalized to the radius of the Earth
+      z -- z-coordinate  normalized to the radius of the Earth
+      meta -- file metadata information
+     """
+
+    # model data and metadata
+    import numpy as np
+    import csv
+    (params, lines) = readGcsv(model_file)
+
+    # model data
+    data = []
+    for line in lines:
+        data.append(line.split(params['delimiter']))
+
+    # model variables
+    depth_variable = params['depth_column']
+    lat_variable = params['latitude_column']
+    lon_variable = params['longitude_column']
+    elev_variable = params['elevation_column']
+    variables = []
+    for this_param in params.keys():
+        if params[this_param] not in (depth_variable, lon_variable, lat_variable, elev_variable
+                                      ) and '_column' in this_param:
+            variables.append(params[this_param])
+
+    # index to the variables
+    var_index = {}
+    for i, val in enumerate(params['header']):
+        if val == depth_variable:
+            depth_index = i
+        elif val == lon_variable:
+            lon_index = i
+        elif val == lat_variable:
+            lat_index = i
+        else:
+            var_index[val] = i
+
+    lat = list(set(get_column(data, lat_index)))
+    lon = list(set(get_column(data, lon_index)))
+    for i, lon_val in enumerate(lon):
+        if float(lon_val) > 180.0:
+            lon[i] = float(lon_val) - 360.0
+
+    depth = list(set(get_column(data, depth_index)))
+
+    # select the values within the ranges (this is to get a count only)
+    latitude = []
+    longitude = []
+    depth2 = []
+    last_i = -1
+    for i, lon_val in enumerate(lon):
+        if i != 0 and i != len(lon) - 1 and i != last_i + inc:
+            continue
+        last_i = i
+
+        for j, depth_val in enumerate(depth):
+            last_k = -1
+            for k, lat_val in enumerate(lat):
+                if k != 0 and k != len(lat) - 1 and k != last_k + inc:
+                    continue
+                last_k = k
+
+                if utils.isValueIn(float(lat_val), ll[0], ur[0]) and utils.isLongitudeIn(float(lon_val),
+                                                                                         ll[1],
+                                                                                         ur[1]) and \
+                        utils.isValueIn(float(depth_val), depth_min, depth_max):
+                    if float(lon_val) not in longitude:
+                        longitude.append(float(lon_val))
+                    if float(depth_val) not in depth2:
+                        depth2.append(float(depth_val))
+                    if float(lat_val) not in latitude:
+                        latitude.append(float(lat_val))
+
+    # model data grid definition
+    V = {}
+    longitude.sort()
+    latitude.sort()
+    depth2.sort()
+    nx = len(longitude)
+    ny = len(depth2)
+    nz = len(latitude)
+
+    index = [-1, -1, -1]
+    meta = {'depth': [], 'lat': [100, -100], 'lon': [400, -400], 'source': model_file}
+
+    X = np.zeros((nx, ny, nz))
+    Y = np.zeros((nx, ny, nz))
+    Z = np.zeros((nx, ny, nz))
+
+    for i, values in enumerate(data):
+        lon_val = float(values[lon_index])
+        lat_val = float(values[lat_index])
+        depth_val = float(values[depth_index])
+        if lon_val in longitude and lat_val in latitude and depth_val in depth2:
+            meta['lon'] = [min(meta['lon'][0], float(lon_val)), max(meta['lon'][0], float(lon_val))]
+            ii = longitude.index(lon_val)
+            jj = depth2.index(depth_val)
+            kk = latitude.index(lat_val)
+            if depth_val not in meta['depth']:
+                meta['depth'].append(float(depth_val))
+            meta['lat'] = [min(meta['lat'][0], float(lat_val)), max(meta['lat'][0], float(lat_val))]
+            x, y, z = llz2xyz(float(lat_val), float(lon_val), float(depth_val) * depthFactor)
+            print(ii, jj, kk)
+            X[ii, jj, kk] = x
+            Y[ii, jj, kk] = y
+            Z[ii, jj, kk] = z
+            index[depth_index] = j
+            index[lat_index] = k
+            index[lon_index] = i
+            for l, var_val in enumerate(variables):
+                if var_val not in V.keys():
+                    V[var_val] = np.zeros((nx, ny, nz))
+                V[var_val][ii, jj, kk] = float(values[var_index[var_val]])
+
+    return X, Y, Z, V, meta
+
+
+def read_geocsv_model_3d_extent(model_file, ll, ur, depth_min, depth_max, inc):
+    """Read in an Earth model in the GeoCSV format and compute the display grid size needed.
+
+      Keyword arguments:
+      model_file -- model file
+      ll -- lower-left coordinate
+      ur -- upper-right coordinate
+      depth_min -- minimum depth
+      depth_max -- maximum depth
+      inc -- grid sampling interval
+
+      Return values:
+      nx -- number of grid points in the x-coordinate
+      ny -- number of grid points in the y-coordinate
+      nz -- number of grid points in the z-coordinate
+     """
+
+    # model data and metadata
+    import numpy as np
+    import csv
+    (params, lines) = readGcsv(model_file)
+
+    # model data
+    data = []
+    for line in lines:
+        data.append(line.split(params['delimiter']))
+
+    # model variables
+    depth_variable = params['depth_column']
+    lat_variable = params['latitude_column']
+    lon_variable = params['longitude_column']
+    elev_variable = params['elevation_column']
+    variables = []
+    for this_param in params.keys():
+        if params[this_param] not in (depth_variable, lon_variable, lat_variable, elev_variable
+                                      ) and '_column' in this_param:
+            variables.append(params[this_param])
+
+    # index to the variables
+    var_index = {}
+    for i, val in enumerate(params['header']):
+        if val == depth_variable:
+            depth_index = i
+        elif val == lon_variable:
+            lon_index = i
+        elif val == lat_variable:
+            lat_index = i
+        else:
+            var_index[val] = i
+
+    lat = list(set(get_column(data, lat_index)))
+    lon = list(set(get_column(data, lon_index)))
+    for i, lon_val in enumerate(lon):
+        if float(lon_val) > 180.0:
+            lon[i] = float(lon_val) - 360.0
+
+    depth = list(set(get_column(data, depth_index)))
+
+    # select the values within the ranges (this is to get a count only)
+    latitude = []
+    longitude = []
+    depth2 = []
+    last_i = -1
+    for i, lon_val in enumerate(lon):
+        if i != 0 and i != len(lon) - 1 and i != last_i + inc:
+            continue
+        last_i = i
+
+        for j, depth_val in enumerate(depth):
+            last_k = -1
+            for k, lat_val in enumerate(lat):
+                if k != 0 and k != len(lat) - 1 and k != last_k + inc:
+                    continue
+                last_k = k
+
+                if utils.isValueIn(float(lat_val), ll[0], ur[0]) and utils.isLongitudeIn(float(lon_val),
+                                                                                         ll[1],
+                                                                                         ur[1]) and \
+                        utils.isValueIn(float(depth_val), depth_min, depth_max):
+                    if float(lon_val) not in longitude:
+                        longitude.append(float(lon_val))
+                    if float(depth_val) not in depth2:
+                        depth2.append(float(depth_val))
+                    if float(lat_val) not in latitude:
+                        latitude.append(float(lat_val))
+
+    # model data grid definition
+    nx = len(sorted(longitude))
+    ny = len(sorted(depth2))
+    nz = len(sorted(latitude))
+
+    return nx, ny, nz
+
 
 ################################################################################################
 #
