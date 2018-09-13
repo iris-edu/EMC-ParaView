@@ -27,6 +27,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # HISTORY:
+#    2018-09-13 Manoch: R.0.2018.256 added support for EMC_DEFAULT_GSV_MODEL
 #    2018-05-09 Manoch: R.0.2018.129 added EMC_DEFAULT_2DMODEL tp fileDict
 #    2018-04-27 Manoch: R.0.2018.117 updateid irisEMC_Files_URL
 #    2018-04-23 Manoch: R.0.2018.113 updateid lat and lon limits for the world
@@ -134,12 +135,14 @@ for key in pathDict.keys():
 #
 # default files
 #
-filesDict       = {'ETOPO5':'etopo5.nc', 'EMC_DEFAULT_MODEL':'wUS-SH-2010_percent.nc', 'EMC_DEFAULT_2DMODEL':'CAM2016Litho.nc'}
+filesDict       = {'ETOPO5': 'etopo5.nc', 'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent.nc',
+                   'EMC_DEFAULT_GSV_MODEL': 'wUS-SH-2010_percent.csv', 'EMC_DEFAULT_2DMODEL': 'CAM2016Litho.nc'}
 
 #
 # default column names for GeoCSV files. User can redefine these in the GeoCSV header
 #
-columnKeys      = {'latitude_column':'latitude','longitude_column':'longitude','depth_column':'depth','elevation_column':'elevation','magnitude_column':'magnitude'}
+columnKeys = {'latitude_column': 'latitude', 'longitude_column': 'longitude', 'depth_column': 'depth',
+                   'elevation_column':'elevation', 'magnitude_column': 'magnitude'}
 
 ################################################################################################
 #
