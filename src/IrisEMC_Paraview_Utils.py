@@ -25,6 +25,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # History:
+#    2018-09-13 Manoch: R.0.2018.256 updated the isValueIn to ensure values are float
 #    2018-03-21 Manoch: R.0.2018.080 release for ParaView support
 #    2015-06-08 Manoch: updated the parameter file message based on the changes
 #               in the main script
@@ -55,7 +56,7 @@ def checkPath(path):
 #
 def isValueIn(value,valueMin,valueMax):
    "check a value to see if it is within limits"
-   if value < valueMin or value > valueMax:
+   if float(value) < float(valueMin) or float(value) > float(valueMax):
        return False
    else:
       return True
