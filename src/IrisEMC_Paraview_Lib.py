@@ -740,6 +740,8 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc):
     # model data and metadata
     import numpy as np
     import csv
+    from operator import itemgetter
+
     (params, lines) = readGcsv(model_file)
 
     # model data
@@ -778,6 +780,11 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc):
 
     depth = list(set(get_column(data, depth_index)))
 
+    # get coordinates sorted otherwise inc will not function properly
+    lat.sort(key=float)
+    lon.sort(key=float)
+    depth.sort(key=float)
+
     # select the values within the ranges (this is to get a count only)
     latitude = []
     longitude = []
@@ -787,7 +794,6 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc):
         if i != 0 and i != len(lon) - 1 and i != last_i + inc:
             continue
         last_i = i
-
         for j, depth_val in enumerate(depth):
             last_k = -1
             for k, lat_val in enumerate(lat):
@@ -808,40 +814,37 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc):
 
     # model data grid definition
     V = {}
-    longitude.sort()
-    latitude.sort()
-    depth2.sort()
     nx = len(longitude)
     ny = len(depth2)
     nz = len(latitude)
-
-    index = [-1, -1, -1]
     meta = {'depth': [], 'lat': [100, -100], 'lon': [400, -400], 'source': model_file}
 
     X = np.zeros((nx, ny, nz))
     Y = np.zeros((nx, ny, nz))
     Z = np.zeros((nx, ny, nz))
 
+    # we want the grid to be in x, y z order (longitude, depth, latitude)
+    data = np.ndarray.tolist(np.asfarray(data))
+    data.sort(key=itemgetter(lat_index, depth_index, lon_index))
     for i, values in enumerate(data):
         lon_val = float(values[lon_index])
         lat_val = float(values[lat_index])
         depth_val = float(values[depth_index])
+
         if lon_val in longitude and lat_val in latitude and depth_val in depth2:
-            meta['lon'] = [min(meta['lon'][0], float(lon_val)), max(meta['lon'][0], float(lon_val))]
+            meta['lon'] = [min(meta['lon'][0], lon_val), max(meta['lon'][0], lon_val)]
+            meta['lat'] = [min(meta['lat'][0], lat_val), max(meta['lat'][0], lat_val)]
+            if depth_val not in meta['depth']:
+                meta['depth'].append(depth_val)
+            x, y, z = llz2xyz(lat_val, lon_val, depth_val * depthFactor)
+
             ii = longitude.index(lon_val)
             jj = depth2.index(depth_val)
             kk = latitude.index(lat_val)
-            if depth_val not in meta['depth']:
-                meta['depth'].append(float(depth_val))
-            meta['lat'] = [min(meta['lat'][0], float(lat_val)), max(meta['lat'][0], float(lat_val))]
-            x, y, z = llz2xyz(float(lat_val), float(lon_val), float(depth_val) * depthFactor)
-            print(ii, jj, kk)
             X[ii, jj, kk] = x
             Y[ii, jj, kk] = y
             Z[ii, jj, kk] = z
-            index[depth_index] = j
-            index[lat_index] = k
-            index[lon_index] = i
+
             for l, var_val in enumerate(variables):
                 if var_val not in V.keys():
                     V[var_val] = np.zeros((nx, ny, nz))
@@ -908,6 +911,11 @@ def read_geocsv_model_3d_extent(model_file, ll, ur, depth_min, depth_max, inc):
 
     depth = list(set(get_column(data, depth_index)))
 
+    # get coordinates sorted otherwise inc will not function properly
+    lat.sort()
+    lon.sort()
+    depth.sort()
+
     # select the values within the ranges (this is to get a count only)
     latitude = []
     longitude = []
@@ -936,12 +944,12 @@ def read_geocsv_model_3d_extent(model_file, ll, ur, depth_min, depth_max, inc):
                     if float(lat_val) not in latitude:
                         latitude.append(float(lat_val))
 
-    # model data grid definition
-    nx = len(sorted(longitude))
-    ny = len(sorted(depth2))
-    nz = len(sorted(latitude))
+    # model data grid extents (starts from zero, so have to be n - 1
+    extent_nx = len(longitude) -1
+    extent_ny = len(depth2) -1
+    extent_nz = len(latitude) - 1
 
-    return nx, ny, nz
+    return extent_nx, extent_ny, extent_nz
 
 
 ################################################################################################
