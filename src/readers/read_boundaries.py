@@ -35,14 +35,14 @@ NumberOfInputs = 0
 OutputDataType = 'vtkPolyData'
 
 Properties = dict(
-    Area   = 1,
-    Alternate_FileName  = '' ,
-    Latitude_Begin     = '',
-    Latitude_End       = '',
-    Longitude_Begin    = '',
-    Longitude_End      = '',
-    Boundary_Elevation = 10,
-    DataFile      = 2
+    Area=1,
+    Alternate_FileName='',
+    Latitude_Begin='',
+    Latitude_End='',
+    Longitude_Begin='',
+    Longitude_End='',
+    Boundary_Elevation=10,
+    DataFile=2
 )
 
 def RequestData():
@@ -57,30 +57,33 @@ def RequestData():
     import urlparse
 
     if len(Alternate_FileName.strip()) > 0:
-         FileName        = Alternate_FileName
-         Label           = ' '.join(['Boundary',lib.fileName(Alternate_FileName).strip()])
+         FileName = Alternate_FileName
+         Label = ' '.join(['Boundary',lib.file_name(Alternate_FileName).strip()])
     else:
-         FileName        = lib.boundaryKeys[DataFile]
-         Label           = lib.boundaryValues[DataFile]
+         FileName = lib.boundaryKeys[DataFile]
+         Label = lib.boundaryValues[DataFile]
 
     # make sure we have input files
-    fileFound,address,source = lib.findFile(FileName,loc='EMC_BOUNDARIES_PATH')
+    fileFound, address, source = lib.find_file(FileName, loc='EMC_BOUNDARIES_PATH')
     if not fileFound:
-        raise Exception('boundary file "'+address+'" not found! Please provide the full path or UR for the file. Aborting.')
-    (params,lines) = lib.readGcsv(address)
+        raise Exception('boundary file "' + address +
+                        '" not found! Please provide the full path or UR for the file. Aborting.')
+    (params, lines) = lib.read_geocsv(address)
     
-    pdo = self.GetOutput() # vtkPolyData
+    pdo = self.GetOutput()  # vtkPolyData
     
-    Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
-    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)"%(lib.areaValues[Area],Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
+    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
+                                                                                Longitude_Begin, Longitude_End)
+    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)" % (lib.areaValues[Area], Latitude_Begin, Latitude_End,
+                                                           Longitude_Begin, Longitude_End)
 
-    x           = []
-    y           = []
-    z           = []
-    segments    = []
+    x = []
+    y = []
+    z = []
+    segments = []
     pointIndex  = -1
     thisSegment = []
-    order       = 1
+    order = 1
 
     # depth is positive down
     Boundary_Elevation *= -1
@@ -89,8 +92,8 @@ def RequestData():
     for key in lib.columnKeys.keys():
         if key in params.keys():
             column_keys[key] = params[key].strip()
-    delimiter   = params['delimiter'].strip()
-    gaps        = params['gaps'].strip()
+    delimiter = params['delimiter'].strip()
+    gaps = params['gaps'].strip()
     latIndex = 0
     lonIndex = 1
     if 'source' in params.keys():
@@ -102,7 +105,7 @@ def RequestData():
         if len(netloc.strip()) <= 0:
            netloc = params['source']
 
-        Label = ' '.join([Label.strip(),'from',netloc.strip()])
+        Label = ' '.join([Label.strip(), 'from', netloc.strip()])
     
     header = lines[0].strip()
     fields = header.split(delimiter)
@@ -110,7 +113,7 @@ def RequestData():
        latIndex = 1
        lonIndex = 0
 
-    for l in range(1,len(lines)):
+    for l in range(1, len(lines)):
         line = lines[l].strip()
         # segment break
         if gaps in line:
@@ -125,25 +128,26 @@ def RequestData():
                  pointIndex  = 0
         else:
              values = line.strip().split(delimiter)
-             lat,lon = values[latIndex],values[lonIndex]
-             if float(lat)< Latitude_Begin or float(lat)> Latitude_End or float(lon) < Longitude_Begin or float(lon) > Longitude_End:
+             lat,lon = values[latIndex], values[lonIndex]
+             if float(lat) < Latitude_Begin or float(lat) > Latitude_End or float(lon) < Longitude_Begin or \
+                     float(lon) > Longitude_End:
                  continue
             
              # convert to spherical coordinates
-             X,Y,Z =lib.llz2xyz(float(lat),float(lon),Boundary_Elevation)
+             X, Y, Z =lib.llz2xyz(float(lat), float(lon), Boundary_Elevation)
              x.append(X)
              y.append(Y)
              z.append(Z)
              pointIndex += 1
 
              # store point index for this segment
-             thisSegment.append(len(x)-1)
+             thisSegment.append(len(x) - 1)
 
     # This vtk object will store all the points
     newPts = vtk.vtkPoints()
     nPoints = len(x)
     for i in range(nPoints):
-       newPts.InsertPoint(i, x[i],y[i],z[i])
+       newPts.InsertPoint(i, x[i], y[i], z[i])
 
     # Add the points to the vtkPolyData object
     pdo.SetPoints(newPts)
@@ -153,7 +157,7 @@ def RequestData():
     pdo.Allocate(nSegments, 1)
 
     # Make a vtkPolyLine object to hold each segment data
-    for i in range(0,nSegments):
+    for i in range(0, nSegments):
        aPolyLine = vtk.vtkPolyLine()
 
        # Indicate the number of points along the line
@@ -166,7 +170,7 @@ def RequestData():
 
     # store boundary metadata
     fieldData = pdo.GetFieldData()
-    fieldData.AllocateArrays(3) # number of fields
+    fieldData.AllocateArrays(3)  # number of fields
 
     data = vtk.vtkFloatArray()
     data.SetName('Latitude\nRange (deg)')

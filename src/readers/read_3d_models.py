@@ -1,5 +1,5 @@
-Name = 'Read3DGeoCSV'
-Label = 'Read 3-D GeoCSV'
+Name = 'Read3DNetCDF'
+Label = 'Read 3-D NetCDF'
 FilterCategory = 'IRIS EMC'
 Help = 'Read and display 3-D netCDF Earth models.'
 
@@ -8,13 +8,13 @@ ExtraXml = '''\
     name="Area"
     command="SetParameter"
     number_of_elements="1"
-    initial_string="Area_drop_down_menu"
+    initial_string="area_drop_down_menu"
     default_values="1">
     <EnumerationDomain name="enum">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
-        Choose the Area to draw in.
+        Choose the area to draw in.
     </Documentation>
 </IntVectorProperty>
 '''
@@ -23,15 +23,18 @@ NumberOfInputs = 0
 OutputDataType = 'vtkStructuredGrid'
 
 Properties = dict(
-    File_name="EMC_DEFAULT_GSV_MODEL",
+    File_name="EMC_DEFAULT_MODEL",
     Area=1,
     Label='',
     Latitude_begin='',
     Latitude_end='',
+    Latitude_variable='latitude',
     Longitude_begin='',
     Longitude_end='',
+    Longitude_variable='longitude',
     Depth_begin=0,
     Depth_end=200,
+    Depth_variable='depth',
     Sampling=5
 )
 
@@ -44,6 +47,7 @@ def RequestData():
     import numpy as np
     import csv
     import os
+    from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
 
@@ -53,28 +57,40 @@ def RequestData():
     Latitude_begin, Latitude_end, Longitude_begin, Longitude_end = lib.get_area(Area, Latitude_begin, Latitude_end,
                                                                                Longitude_begin, Longitude_end)
 
+    if len(Latitude_variable.strip()) <= 0 or len(Longitude_variable.strip()) <= 0 or len(Depth_variable.strip()) <= 0:
+        raise Exception('Latitude, Longitude and Depth variable are required')
+
     # make sure we have input files
-    file_found, address, source = lib.find_file(File_name, loc='EMC_MODELS_PATH')
-    if not file_found:
+    fileFound, address, source = lib.find_file(File_name, loc='EMC_MODELS_PATH')
+    if not fileFound:
         raise Exception('model file "' + address + '" not found! Aborting.')
 
     filename = lib.file_name(File_name)
     if len(Label.strip()) <= 0:
         if source == filename:
-           Label = "%s " % filename
+           Label = "%s "%(filename)
         else:
-           Label = "%s from %s " % (filename, source)
+           Label = "%s from %s "%(filename, source)
 
     sg = self.GetOutput()  # vtkPolyData
 
-    x, y, z, v, meta = lib.read_geocsv_model_3d(address,
-                                                (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                Depth_begin, Depth_end, Sampling, False)
-    nx = len(x)
+    this_filename, extension = splitext(address)
+    if extension.lower() == '.nc':
+        X, Y, Z, V, meta = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
+                                                 (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
+                                                 Depth_begin, Depth_end, inc=Sampling)
+    elif extension.lower() == '.csv':
+        X, Y, Z, V, meta = lib.read_geocsv_model_3d(address,
+                                                    (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
+                                                    Depth_begin, Depth_end, Sampling, False)
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+
+    nx = len(X)
     if nx <= 0:
         raise Exception('No data found!')
-    ny = len(x[0])
-    nz = len(x[0][0])
+    ny = len(X[0])
+    nz = len(X[0][0])
     sg.SetDimensions(nx, ny, nz)
 
     # make geometry
@@ -82,22 +98,22 @@ def RequestData():
     for k in range(nz):
         for j in range(ny):
             for i in range(nx):
-                points.InsertNextPoint((x[i, j, k], y[i, j, k], z[i, j, k]))
+                points.InsertNextPoint((X[i, j, k], Y[i, j, k], Z[i, j, k]))
     sg.SetPoints(points)
 
     # make geometry
     count = 0
-    for var in v.keys():
+    for var in V.keys():
         scalars = vtk.vtkFloatArray()
         scalars.SetNumberOfComponents(1)
         scalars.SetName(var)
         for k in range(nz):
             for j in range(ny):
                 for i in range(nx):
-                    if v[var][i, j, k] > 999.0 or v[var][i, j, k] == float('nan'):
+                    if V[var][i, j, k] > 999.0 or V[var][i, j, k] == float('nan'):
                         scalars.InsertNextValue(float('nan'))
                     else:
-                        scalars.InsertNextValue(v[var][i, j, k])
+                        scalars.InsertNextValue(V[var][i, j, k])
         if count == 0:
             sg.GetPointData().SetScalars(scalars)
         else:
@@ -131,7 +147,7 @@ def RequestData():
     data.InsertNextValue(File_name)
     field_data.AddArray(data)
 
-    label_2 = ' - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f, depth:%0.1f - %0.1f)'%(lib.areaValues[Area], meta['lat'][0],
+    label_2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f, depth:%0.1f - %0.1f)"%(lib.areaValues[Area], meta['lat'][0],
                                                                                meta['lat'][1], meta['lon'][0],
                                                                                meta['lon'][1], meta['depth'][0],
                                                                                meta['depth'][-1])
@@ -143,16 +159,25 @@ def RequestInformation():
     sys.path.insert(0, "EMC_SRC_PATH")
     import IrisEMC_Paraview_Lib as lib
     from paraview import util
+    from os.path import splitext
 
-    file_found, address, source = lib.find_file(File_name, loc='EMC_MODELS_PATH')
-
-    if not file_found:
+    fileFound, address, source = lib.find_file(File_name, loc='EMC_MODELS_PATH')
+    if not fileFound:
         raise Exception('model file "' + address + '" not found! Aborting.')
     Latitude_begin, Latitude_end, Longitude_begin, Longitude_end = lib.get_area(Area, Latitude_begin, Latitude_end,
                                                                                Longitude_begin, Longitude_end)
-    nx, ny, nz = lib.read_geocsv_model_3d(address,
-                                          (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                          Depth_begin, Depth_end, Sampling, True)
+    this_filename, extension = splitext(address)
+    if extension.lower() == '.nc':
+        nx, ny, nz = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
+                                                 (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
+                                                 Depth_begin, Depth_end, inc=Sampling, extent=True)
+    elif extension.lower() == '.csv':
+        nx, ny, nz = lib.read_geocsv_model_3d(address,
+                                                    (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
+                                                    Depth_begin, Depth_end, Sampling, True)
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+
 
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0, nx, 0, ny, 0, nz])

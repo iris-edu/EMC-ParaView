@@ -36,14 +36,14 @@ NumberOfInputs = 0
 OutputDataType = 'vtkStructuredGrid'
 
 Properties = dict(
-    Alternate_FileName  = '' ,
-    Latitude_Begin      = '',
-    Latitude_End        = '',
-    Longitude_Begin     = '',
-    Longitude_End       = '',
-    Sampling            = 5,
-    Slab                = 0,
-    Area                = 1
+    Alternate_FileName='',
+    Latitude_Begin='',
+    Latitude_End='',
+    Longitude_Begin='',
+    Longitude_End='',
+    Sampling=5,
+    Slab=0,
+    Area=1
 )
 
 def RequestData():
@@ -57,41 +57,45 @@ def RequestData():
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
     import urlparse
+
     USGS = True
     if len(Alternate_FileName.strip()) > 0:
-         FileName        = Alternate_FileName
-         Label           = ' '.join(['SLAB',lib.fileName(Alternate_FileName).strip()])
-         USGS            = False
+         FileName = Alternate_FileName
+         Label = ' '.join(['SLAB', lib.file_name(Alternate_FileName).strip()])
+         USGS = False
     else:
-         FileName        = lib.usgsSlabKeys[Slab]
+         FileName = lib.usgsSlabKeys[Slab]
 
     depthFactor = -1
 
-    Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
-    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)"%(lib.areaValues[Area],Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
+    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
+                                                                               Longitude_Begin, Longitude_End)
+    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)"%(lib.areaValues[Area], Latitude_Begin, Latitude_End,
+                                                         Longitude_Begin, Longitude_End)
 
     # Make sure we have input files
-    fileFound,address,source = lib.findFile(FileName,loc='EMC_SLABS_PATH')
+    fileFound, address, source = lib.find_file(FileName, loc='EMC_SLABS_PATH')
     if not fileFound:
         raise Exception('model file "'+address+'" not found! Aborting.')
 
     sg = self.GetOutput() # vtkPolyData
 
-    X,Y,Z,V,label = lib.readSlabFile(address,(Latitude_Begin,Longitude_Begin),(Latitude_End,Longitude_End),inc=Sampling)
+    X, Y, Z, V, label = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
+                                           Sampling, False)
     
     nx = len(X)
     ny = len(X[0])
     nz = len(X[0][0])
-    sg.SetDimensions(nx,ny,nz)
+    sg.SetDimensions(nx, ny, nz)
 
     #
     # make geometry
     #
     points = vtk.vtkPoints()
     for k in range(nz):
-       for j in range(ny):
-          for i in range(nx):
-             points.InsertNextPoint((X[i,j,k],Y[i,j,k],Z[i,j,k]))
+        for j in range(ny):
+            for i in range(nx):
+                points.InsertNextPoint((X[i, j, k], Y[i, j, k], Z[i, j, k]))
     sg.SetPoints(points)
 
     #
@@ -99,77 +103,82 @@ def RequestData():
     #
     count = 0
     for var in V.keys():
-       scalars = vtk.vtkFloatArray()
-       scalars.SetNumberOfComponents(1)
-       scalars.SetName(var)
-       for k in range(nz):
-           for j in range(ny):
-               for i in range(nx):
-                scalars.InsertNextValue(depthFactor * V[var][i,j,k])
-       if count == 0:
-          sg.GetPointData().SetScalars(scalars)
-       else:
-          sg.GetPointData().AddArray(scalars)
-       count += 1
+        scalars = vtk.vtkFloatArray()
+        scalars.SetNumberOfComponents(1)
+        scalars.SetName(var)
+        for k in range(nz):
+            for j in range(ny):
+                for i in range(nx):
+                    scalars.InsertNextValue(depthFactor * V[var][i, j, k])
+        if count == 0:
+            sg.GetPointData().SetScalars(scalars)
+        else:
+            sg.GetPointData().AddArray(scalars)
+        count += 1
 
-    # store USGS metadata
+        # store USGS metadata
     if USGS:
-       fieldData = sg.GetFieldData()
-       fieldData.AllocateArrays(3) # number of fields
+        fieldData = sg.GetFieldData()
+        fieldData.AllocateArrays(3)  # number of fields
 
-       data = vtk.vtkFloatArray()
-       data.SetName('Latitude\nRange (deg)')
-       data.InsertNextValue(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Y'][0])
-       data.InsertNextValue(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Y'][1])
-       fieldData.AddArray(data)
+        data = vtk.vtkFloatArray()
+        data.SetName('Latitude\nRange (deg)')
+        data.InsertNextValue(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Y'][0])
+        data.InsertNextValue(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Y'][1])
+        fieldData.AddArray(data)
 
-       data = vtk.vtkFloatArray()
-       data.SetName('Longitude\nRange (deg)')
-       minX = lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['X'][0]
-       if minX > 180:
-           minX -= 360
-       maxX = lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['X'][1]
-       if maxX > 180:
-           maxX -= 360
-       xMin = min([minX,maxX])
-       xMax = max([minX,maxX])
-       data.InsertNextValue(xMin)
-       data.InsertNextValue(xMax)
-       fieldData.AddArray(data)
+        data = vtk.vtkFloatArray()
+        data.SetName('Longitude\nRange (deg)')
+        minX = lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['X'][0]
+        if minX > 180:
+            minX -= 360
+        maxX = lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['X'][1]
+        if maxX > 180:
+            maxX -= 360
+        xMin = min([minX, maxX])
+        xMax = max([minX, maxX])
+        data.InsertNextValue(xMin)
+        data.InsertNextValue(xMax)
+        fieldData.AddArray(data)
 
-       data = vtk.vtkFloatArray()
-       data.SetName('Depth to Slab\nRange (km)')
-       data.InsertNextValue(abs(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Z'][1]))
-       data.InsertNextValue(abs(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Z'][0]))
-       fieldData.AddArray(data)
+        data = vtk.vtkFloatArray()
+        data.SetName('Depth to Slab\nRange (km)')
+        data.InsertNextValue(abs(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Z'][1]))
+        data.InsertNextValue(abs(lib.usgsSlabRangeDict[lib.usgsSlabKeys[Slab]]['Z'][0]))
+        fieldData.AddArray(data)
 
-       data = vtk.vtkStringArray()
-       data.SetName('Source')
-       data.InsertNextValue(lib.usgsSlab_URL)
-       Label = ' '.join(['USGS Slab 1.0:',lib.usgsSlabValues[Slab].strip(),'from',urlparse.urlparse(lib.usgsSlab_URL).netloc.strip()])
-       data.InsertNextValue(lib.usgsSlabKeys[Slab])
-       fieldData.AddArray(data)
+        data = vtk.vtkStringArray()
+        data.SetName('Source')
+        data.InsertNextValue(lib.usgsSlab_URL)
+        Label = ' '.join(['USGS Slab 1.0:', lib.usgsSlabValues[Slab].strip(), 'from',
+                          urlparse.urlparse(lib.usgsSlab_URL).netloc.strip()])
+        data.InsertNextValue(lib.usgsSlabKeys[Slab])
+        fieldData.AddArray(data)
 
-    RenameSource(' '.join([Label.strip(),Label2.strip()]))
+    RenameSource(' '.join([Label.strip(), Label2.strip()]))
 
 def RequestInformation():
     sys.path.insert(0, "EMC_SRC_PATH")
     import IrisEMC_Paraview_Lib as lib
     from paraview import util
 
-    Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
+    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
+                                                                               Longitude_Begin, Longitude_End)
 
     if len(Alternate_FileName.strip()) > 0:
-         FileName        = Alternate_FileName
-         Label           = ' '.join(['SLAB',lib.fileName(Alternate_FileName).strip()])
+         FileName = Alternate_FileName
+         Label = ' '.join(['SLAB', lib.file_name(Alternate_FileName).strip()])
     else:
-         FileName        = lib.usgsSlabKeys[Slab]
-         Label           = ' '.join(['USGS Slab 1.0 -',lib.usgsSlabValues[Slab].strip()])
+         FileName = lib.usgsSlabKeys[Slab]
+         Label = ' '.join(['USGS Slab 1.0 -', lib.usgsSlabValues[Slab].strip()])
     
-    fileFound,address,source = lib.findFile(FileName,loc='EMC_SLABS_PATH')
+    fileFound, address, source = lib.find_file(FileName, loc='EMC_SLABS_PATH')
+
     if not fileFound:
         raise Exception('model file "'+address+'" not found! Aborting.')
 
-    nx,ny,nz = lib.getSlabExtent(address,(Latitude_Begin,Longitude_Begin),(Latitude_End,Longitude_End),inc=Sampling)
+    nx, ny, nz = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
+                                    Sampling, True)
+
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
-    util.SetOutputWholeExtent(self, [0,nx-1, 0,ny-1, 0,nz-1])
+    util.SetOutputWholeExtent(self, [0, nx, 0, ny, 0, nz])

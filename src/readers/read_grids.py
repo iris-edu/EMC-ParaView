@@ -23,14 +23,14 @@ NumberOfInputs = 0
 OutputDataType = 'vtkPolyData'
 
 Properties = dict(
-    Area            = 1,
-    Latitude_Begin  = '',
-    Latitude_End    = '',
-    Longitude_Begin = '',
-    Longitude_End   = '',
-    Grid_Elevation  = 10.0,
-    Grid_Resolution_degrees = 1,
-    Grid_Spacing    = 20.0
+    Area=1,
+    Latitude_Begin='',
+    Latitude_End='',
+    Longitude_Begin='',
+    Longitude_End='',
+    Grid_Elevation=10.0,
+    Grid_Resolution_degrees=1,
+    Grid_Spacing=20.0
 )
 
 def RequestData():
@@ -42,16 +42,22 @@ def RequestData():
     sys.path.insert(0, "EMC_SRC_PATH")
     import IrisEMC_Paraview_Lib as lib
 
-    pdo = self.GetOutput() # vtkPolyData
+    pdo = self.GetOutput()  # vtkPolyData
 
-    Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End = lib.getArea(Area,Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End)
-    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f) with grid spacing of %0.1f degrees"%(lib.areaValues[Area],Latitude_Begin,Latitude_End,Longitude_Begin,Longitude_End,Grid_Spacing)
+    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
+                                                                                Longitude_Begin, Longitude_End)
+    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f) with grid spacing of %0.1f degrees" % (lib.areaValues[Area],
+                                                                                              Latitude_Begin,
+                                                                                              Latitude_End,
+                                                                                              Longitude_Begin,
+                                                                                              Longitude_End,
+                                                                                              Grid_Spacing)
 
-    x           = []
-    y           = []
-    z           = []
-    segments    = []
-    pointIndex  = -1
+    x = []
+    y = []
+    z = []
+    segments = []
+    pointIndex = -1
     thisSegment = []
 
     # depth is positive down
@@ -59,26 +65,26 @@ def RequestData():
 
     # create gridpoints along latitudes
     nLat = int((Latitude_End - Latitude_Begin) / Grid_Spacing) + 1
-    mLat = int((Latitude_End - Latitude_Begin) / Grid_Resolution_degrees)  + 1
+    mLat = int((Latitude_End - Latitude_Begin) / Grid_Resolution_degrees) + 1
     nLon = int((Longitude_End - Longitude_Begin) / Grid_Spacing) + 1
-    mLon = int((Longitude_End - Longitude_Begin) / Grid_Resolution_degrees)  + 1
+    mLon = int((Longitude_End - Longitude_Begin) / Grid_Resolution_degrees) + 1
 
     lat = Latitude_Begin - Grid_Spacing
     for i in range(nLat):
         lat += Grid_Spacing
         thisSegment = []
-        pointIndex  = 0
-        lon = Longitude_Begin -Grid_Resolution_degrees
+        pointIndex = 0
+        lon = Longitude_Begin - Grid_Resolution_degrees
         for j in range(mLon):
             lon += Grid_Resolution_degrees
-            X,Y,Z = lib.llz2xyz(lat,lon,Grid_Elevation)
+            X, Y, Z = lib.llz2xyz(lat, lon, Grid_Elevation)
             x.append(X)
             y.append(Y)
             z.append(Z)
             pointIndex += 1
 
             # store point index for this segment
-            thisSegment.append(len(x)-1)
+            thisSegment.append(len(x) - 1)
         segments.append(thisSegment)
 
     # create gridpoints along longitudes
@@ -86,25 +92,25 @@ def RequestData():
     for j in range(nLon):
         lon += Grid_Spacing
         thisSegment = []
-        pointIndex  = 0
+        pointIndex = 0
         lat = Latitude_Begin - Grid_Resolution_degrees
         for i in range(mLat):
             lat += Grid_Resolution_degrees
-            X,Y,Z = lib.llz2xyz(lat,lon,Grid_Elevation)
+            X, Y, Z = lib.llz2xyz(lat, lon, Grid_Elevation)
             x.append(X)
             y.append(Y)
             z.append(Z)
             pointIndex += 1
 
             # store point index for this segment
-            thisSegment.append(len(x)-1)
+            thisSegment.append(len(x) - 1)
         segments.append(thisSegment)
 
     # this vtk object will store all the points
     newPts = vtk.vtkPoints()
     nPoints = len(x)
     for i in range(nPoints):
-       newPts.InsertPoint(i, x[i],y[i],z[i])
+       newPts.InsertPoint(i, x[i], y[i], z[i])
 
     # add the points to the vtkPolyData object
     pdo.SetPoints(newPts)
@@ -114,7 +120,7 @@ def RequestData():
     pdo.Allocate(nSegments, 1)
 
     # make a vtkPolyLine object to hold each segment data
-    for i in range(0,nSegments):
+    for i in range(0, nSegments):
        aPolyLine = vtk.vtkPolyLine()
 
        # indicate the number of points along the line
@@ -125,7 +131,7 @@ def RequestData():
 
     # store grid metadata
     fieldData = pdo.GetFieldData()
-    fieldData.AllocateArrays(3) # number of fields
+    fieldData.AllocateArrays(3)  # number of fields
 
     data = vtk.vtkFloatArray()
     data.SetName('Latitude\nRange (deg)')

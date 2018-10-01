@@ -24,10 +24,10 @@ NumberOfInputs = 0
 OutputDataType = 'vtkTable'
 
 Properties = dict(
-    Coordinate_Type = 0,
-    X_or_Longitude = -113.0,
-    Y_or_Latitude  = 20.0,
-    Z_or_Depth      = 50.0
+    Coordinate_Type=0,
+    X_or_Longitude=-113.0,
+    Y_or_Latitude=20.0,
+    Z_or_Depth=50.0
 )
 
 def RequestData():
@@ -45,38 +45,23 @@ def RequestData():
     else:
        view = simple.GetActiveView()
        layout = simple.GetLayout(view)
-       locationId = layout.SplitViewVertical(view=view ,fraction=0.7)
 
-    pdo = self.GetOutput() # vtkTable
+    pdo = self.GetOutput()  # vtkTable
 
     if Coordinate_Type == 0:
        lon = X_or_Longitude
        lat = Y_or_Latitude
        depth = Z_or_Depth
-       x,y,z = lib.llz2xyz(lat,lon,depth)
+       x, y, z = lib.llz2xyz(lat, lon, depth)
     else:
        x = X_or_Longitude
        y = Y_or_Latitude
        z = Z_or_Depth
-       lat,lon,depth = lib.xyz2llz(x,y,z)
-
-    # VTK arrays for columns
-    #name = vtk.vtkStringArray()
-    #name.SetNumberOfComponents(1)
-    #name.SetNumberOfTuples(6)
-    #name.SetName("Component Name")    
-    #name.InsertNextValue("X")
-    #name.InsertNextValue("Y")
-    #name.InsertNextValue("Z")
-    #name.InsertNextValue("Latitude")
-    #name.InsertNextValue("Longitude")
-    #name.InsertNextValue("Depth")
-    #pdo.Array(name)
-
+       lat, lon, depth = lib.xyz2llz(x, y, z)
 
     # store metadata
     fieldData = pdo.GetFieldData()
-    fieldData.AllocateArrays(3) # number of fields
+    fieldData.AllocateArrays(3)  # number of fields
 
     fieldData = pdo.GetFieldData()
     data = vtk.vtkFloatArray()
