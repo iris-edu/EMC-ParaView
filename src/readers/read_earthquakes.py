@@ -1,5 +1,5 @@
 Name = 'ReadEarthquakes'
-Label = 'Show Earthquake Locations'
+label = 'Show Earthquake Locations'
 FilterCategory = 'IRIS EMC'
 Help = 'Get and display earthquake locations from USGS.'
 
@@ -51,8 +51,9 @@ Properties = dict(
     Max_Count=200
 )
 
+
 def RequestData():
-    # R.0.2018.120
+    # R.1.2018.290
     import sys
     sys.path.insert(0, "EMC_SRC_PATH")
     import paraview.simple as simple
@@ -60,60 +61,60 @@ def RequestData():
     import csv
     import os
     from vtk.util import numpy_support as nps
-    import IrisEMC_Paraview_Lib as lib
+    import IrisEMC_Paraview_Lib as Lib
     import urlparse
 
-    Label = ''
-
     pts = vtk.vtkPoints()
-    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
+    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = Lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                 Longitude_Begin, Longitude_End)
-    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f, depth:%0.1f-%0.1f)" % (lib.areaValues[Area], Latitude_Begin,
+    label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f, depth:%0.1f-%0.1f)" % (Lib.areaValues[Area], Latitude_Begin,
                                                                               Latitude_End, Longitude_Begin,
                                                                               Longitude_End, Depth_Begin, Depth_End)
 
     # make sure we have input files
-    query = lib.earthquakeQuery % (Start_Time, Magnitude_Begin, Magnitude_End, Depth_Begin, Depth_End, Latitude_Begin,
+    query = Lib.earthquakeQuery % (Start_Time, Magnitude_Begin, Magnitude_End, Depth_Begin, Depth_End, Latitude_Begin,
                                    Latitude_End, Longitude_Begin, Longitude_End, Max_Count)
     if len(Alternate_FileName) <= 0:
-        eqFile = lib.query2filename(query, url=lib.earthquakeKeys[Data_Source])
-        query = '?'.join([lib.earthquakeKeys[Data_Source], query])
-        fileFound, address, source = lib.find_file(eqFile, loc='EMC_EARTHQUAKES_PATH', query=query)
+        eqFile = Lib.query2filename(query, url=Lib.earthquakeKeys[Data_Source])
+        query = '?'.join([Lib.earthquakeKeys[Data_Source], query])
+        fileFound, address, source = Lib.find_file(eqFile, loc='EMC_EARTHQUAKES_PATH', query=query)
     else:
-       fileFound, address, source = lib.find_file(Alternate_FileName, loc='EMC_EARTHQUAKES_PATH')
+        fileFound, address, source = Lib.find_file(Alternate_FileName, loc='EMC_EARTHQUAKES_PATH')
     if not fileFound:
         raise Exception('earthquake catalog file "' + address +
                         '" not found! Please provide the full path or UR for the file. Aborting.')
-    (params, lines) = lib.read_geocsv(address)
+    (params, lines) = Lib.read_geocsv(address)
 
     pdo = self.GetOutput()  # vtkPoints
-    column_keys = lib.columnKeys
-    for key in lib.columnKeys.keys():
+    column_keys = Lib.columnKeys
+    for key in Lib.columnKeys.keys():
         if key in params.keys():
             column_keys[key] = params[key]
 
-    delimiter = params['delimiter'].strip()
     origin = None
     if 'source' in params:
         origin = params['source']
-        Label = urlparse.urlparse(origin).netloc
+        this_label = urlparse.urlparse(origin).netloc
     else:
         try:
-            Label = urlparse.urlparse(Alternate_FileName).netloc
-        except:
-            Label = Alternate_FileName
+            this_label = urlparse.urlparse(Alternate_FileName).netloc
+        except Exception:
+            this_label = Alternate_FileName
 
-    header = lines[0].strip()
-    fields = header.split(delimiter)
-    for i in range(len(fields)):
-          if fields[i].strip().lower() == column_keys['longitude_column'].lower():
-             lonIndex = i
-          elif fields[i].strip().lower() == column_keys['latitude_column'].lower():
-             latIndex = i
-          elif fields[i].strip().lower() == column_keys['depth_column'].lower():
-             depthIndex = i
-          elif fields[i].strip().lower() == column_keys['magnitude_column'].lower():
-             magIndex = i
+    header = params['header']
+    lat_index = None
+    lon_index = None
+    depth_index = None
+    mag_index = None
+    for index, value in enumerate(header):
+        if value.strip().lower() == column_keys['longitude_column'].lower():
+            lon_index = index
+        elif value.strip().lower() == column_keys['latitude_column'].lower():
+            lat_index = index
+        elif value.strip().lower() == column_keys['depth_column'].lower():
+            depth_index = index
+        elif value.strip().lower() == column_keys['magnitude_column'].lower():
+            mag_index = index
 
     scalars = vtk.vtkFloatArray()
     scalars.SetNumberOfComponents(1)
@@ -123,92 +124,91 @@ def RequestData():
     depth = []
     mag = []
 
-    for i in range(1,len(lines)):
-       line = lines[i].strip()
-       values = line.strip().split(params['delimiter'].strip())
-       lat.append(float(values[latIndex]))
-       lon.append(float(values[lonIndex]))
-       depth.append(float(values[depthIndex]))
-       mag.append(float(values[magIndex]))
-       if Latitude_Begin <= lat[-1] <= Latitude_End and Longitude_Begin <= lon[-1] <= Longitude_End:
-          x, y, z = lib.llz2xyz(lat[-1], lon[-1], depth[-1])
-          pts.InsertNextPoint(x, y, z)
-          scalars.InsertNextValue(mag[-1])
+    for i in range(1, len(lines)):
+        line = lines[i].strip()
+        values = line.strip().split(params['delimiter'].strip())
+        lat.append(float(values[lat_index]))
+        lon.append(float(values[lon_index]))
+        depth.append(float(values[depth_index]))
+        mag.append(float(values[mag_index]))
+        if Latitude_Begin <= lat[-1] <= Latitude_End and Longitude_Begin <= lon[-1] <= Longitude_End:
+            x, y, z = Lib.llz2xyz(lat[-1], lon[-1], depth[-1])
+            pts.InsertNextPoint(x, y, z)
+            scalars.InsertNextValue(mag[-1])
     pdo.SetPoints(pts)
     pdo.GetPointData().AddArray(scalars)
 
-    if len(Label.strip()) > 0:
-        simple.RenameSource(' '.join(['Earthquake locations:', 'from', Label.strip(), Label2.strip()]))
-
-    view = simple.GetActiveView()
+    if len(this_label.strip()) > 0:
+        simple.RenameSource(' '.join(['Earthquake locations:', 'from', this_label.strip(), label2.strip()]))
 
     # store metadata
-    fieldData = pdo.GetFieldData()
-    fieldData.AllocateArrays(3)  # number of fields
+    field_data = pdo.GetFieldData()
+    field_data.AllocateArrays(3)  # number of fields
 
     data = vtk.vtkFloatArray()
     data.SetName('Latitude\nRange (deg)')
     data.InsertNextValue(min(lat))
     data.InsertNextValue(max(lat))
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
     data = vtk.vtkFloatArray()
     data.SetName('Longitude\nRange (deg)')
     data.InsertNextValue(min(lon))
     data.InsertNextValue(max(lon))
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
     data = vtk.vtkFloatArray()
     data.SetName('Depth\nRange (km)')
     data.InsertNextValue(min(depth))
     data.InsertNextValue(max(depth))
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
     data = vtk.vtkFloatArray()
     data.SetName('Magnitude\nRange')
     data.InsertNextValue(min(mag))
     data.InsertNextValue(max(mag))
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
     data = vtk.vtkIntArray()
     data.SetName('Max. Event\nCount')
     data.InsertNextValue(len(mag))
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
     data = vtk.vtkStringArray()
     data.SetName('Start Date')
     data.InsertNextValue(Start_Time)
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
     data = vtk.vtkStringArray()
     data.SetName('Source')
     if origin is not None:
-       data.InsertNextValue(origin)
+        data.InsertNextValue(origin)
 
     data.InsertNextValue(source)
-    fieldData.AddArray(data)
+    field_data.AddArray(data)
 
-    pdo.SetFieldData(fieldData)
+    pdo.SetFieldData(field_data)
+
 
 def RequestInformation():
     from paraview import util
     sys.path.insert(0, "EMC_SRC_PATH")
-    import IrisEMC_Paraview_Lib as lib
+    import IrisEMC_Paraview_Lib as Lib
 
-    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
+    Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = Lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                 Longitude_Begin, Longitude_End)
-    query = lib.earthquakeQuery % (Start_Time, Magnitude_Begin, Magnitude_End, Depth_Begin, Depth_End, Latitude_Begin,
+    query = Lib.earthquakeQuery % (Start_Time, Magnitude_Begin, Magnitude_End, Depth_Begin, Depth_End, Latitude_Begin,
                                    Latitude_End, Longitude_Begin, Longitude_End, Max_Count)
     if len(Alternate_FileName) <= 0:
-        eqFile = lib.query2filename(query, url=lib.earthquakeKeys[Data_Source])
-        query = '?'.join([lib.earthquakeKeys[Data_Source], query])
-        fileFound, address, source = lib.find_file(eqFile, loc='EMC_EARTHQUAKES_PATH', query=query)
+        eq_file = Lib.query2filename(query, url=Lib.earthquakeKeys[Data_Source])
+        query = '?'.join([Lib.earthquakeKeys[Data_Source], query])
+        file_found, address, source = Lib.find_file(eq_file, loc='EMC_EARTHQUAKES_PATH', query=query)
     else:
-       fileFound, address, source = lib.find_file(Alternate_FileName, loc='EMC_EARTHQUAKES_PATH')
-    if not fileFound:
-       raise Exception('earthquake catalog file "' + address +
-                       '" not found! Please provide the full path or UR for the file. Aborting.')
-    (params, lines) = lib.read_geocsv(address)
+        file_found, address, source = Lib.find_file(Alternate_FileName, loc='EMC_EARTHQUAKES_PATH')
+    if not file_found:
+        raise Exception('earthquake catalog file "' + address +
+                        '" not found! Please provide the full path or UR for the file. Aborting.')
+    (params, lines) = Lib.read_geocsv(address)
     num = len(lines)
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0, num - 1, 0, num - 1, 0, num - 1])
