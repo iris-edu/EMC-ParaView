@@ -1,5 +1,5 @@
 Name = 'ReadEarthquakes'
-label = 'Show Earthquake Locations'
+Label = 'Show Earthquake Locations'
 FilterCategory = 'IRIS EMC'
 Help = 'Get and display earthquake locations from USGS.'
 
