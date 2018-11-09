@@ -1,7 +1,7 @@
-Name = 'Read3DNetCDF'
-Label = 'Read 3-D NetCDF'
+Name = 'Read3DModel'
+Label = 'Read 3-D Model'
 FilterCategory = 'IRIS EMC'
-Help = 'Read and display 3-D netCDF Earth models.'
+Help = 'Read and display 3-D Earth models.'
 
 ExtraXml = '''\
 <IntVectorProperty
@@ -35,6 +35,7 @@ Properties = dict(
     Depth_begin=0,
     Depth_end=200,
     Depth_variable='depth',
+    Vertical_Scaling=1,
     Sampling=5
 )
 
@@ -78,11 +79,11 @@ def RequestData():
     if extension.lower() == '.nc':
         X, Y, Z, V, meta = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
                                                  (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                 Depth_begin, Depth_end, inc=Sampling)
+                                                 Depth_begin, Depth_end, Vertical_Scaling, Sampling)
     elif extension.lower() == '.csv':
         X, Y, Z, V, meta = lib.read_geocsv_model_3d(address,
                                                     (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                    Depth_begin, Depth_end, Sampling, False)
+                                                    Depth_begin, Depth_end, Vertical_Scaling, Sampling)
     else:
         raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
@@ -110,7 +111,7 @@ def RequestData():
         for k in range(nz):
             for j in range(ny):
                 for i in range(nx):
-                    if V[var][i, j, k] > 999.0 or V[var][i, j, k] == float('nan'):
+                    if V[var][i, j, k] == float('nan'):
                         scalars.InsertNextValue(float('nan'))
                     else:
                         scalars.InsertNextValue(V[var][i, j, k])
@@ -170,11 +171,11 @@ def RequestInformation():
     if extension.lower() == '.nc':
         nx, ny, nz = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
                                                  (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                 Depth_begin, Depth_end, inc=Sampling, extent=True)
+                                                 Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling, extent=True)
     elif extension.lower() == '.csv':
         nx, ny, nz = lib.read_geocsv_model_3d(address,
                                                     (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                    Depth_begin, Depth_end, Sampling, True)
+                                                    Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling, extent=True)
     else:
         raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
