@@ -107,13 +107,12 @@ def RequestData():
 
         Label = ' '.join([Label.strip(), 'from', netloc.strip()])
     
-    header = lines[0].strip()
-    fields = header.split(delimiter)
+    fields = params['header']
     if fields[0].strip() == column_keys['longitude_column']:
        latIndex = 1
        lonIndex = 0
 
-    for l in range(1, len(lines)):
+    for l in range(len(lines)):
         line = lines[l].strip()
         # segment break
         if gaps in line:
