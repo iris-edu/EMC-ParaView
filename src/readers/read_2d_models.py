@@ -1,7 +1,7 @@
-Name = 'Read2DEarthModels'
-Label = 'Read 2D Earth Models'
+Name = 'Read2DEarthModel'
+Label = 'Read 2D Model'
 FilterCategory = 'IRIS EMC'
-Help = 'Read and display 2D netCDF Earth models.'
+Help = 'Read and display 2D Earth models.'
 
 ExtraXml = '''\
 <IntVectorProperty
@@ -25,7 +25,7 @@ OutputDataType = 'vtkStructuredGrid'
 Properties = dict(
     FileName="EMC_DEFAULT_2DMODEL",
     Area=1,
-    Depth=-1,
+    Roughness=0,
     Label='',
     Latitude_Begin='',
     Latitude_End='',
@@ -34,7 +34,7 @@ Properties = dict(
     Longitude_End='',
     Longitude_Variable='longitude',
     Variable='thickness',
-    Sampling=2
+    Sampling=2,
 )
 
 def RequestData():
@@ -45,6 +45,7 @@ def RequestData():
     import numpy as np
     import csv
     import os
+    from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
 
@@ -67,14 +68,18 @@ def RequestData():
 
     sg = self.GetOutput()  # vtkPolyData
 
-    if Depth < 0:
-       X, Y, Z, V, meta = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
-                                                  (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                                  Sampling, None, False)
+    this_filename, extension = splitext(address)
+    if extension.lower() == '.nc':
+        X, Y, Z, V, meta = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
+                                                   (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
+                                                   Sampling, Roughness, extent=False)
+    elif extension.lower() == '.csv':
+         X, Y, Z, V, meta = lib.read_geocsv_model_2d(address,
+                                                     (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
+                                                     Sampling, Roughness, extent=False)
     else:
-       X, Y, Z, V, meta = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
-                                                  (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                                  Sampling, Depth, False)
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+
     nx = len(X)
     if nx <= 0:
         raise Exception('No data found!')
@@ -138,6 +143,7 @@ def RequestData():
 def RequestInformation():
     sys.path.insert(0, "EMC_SRC_PATH")
     import IrisEMC_Paraview_Lib as lib
+    from os.path import splitext
     from paraview import util
 
     fileFound, address, source = lib.find_file(FileName, loc='EMC_MODELS_PATH')
@@ -146,9 +152,17 @@ def RequestInformation():
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area,
                                                                                 Latitude_Begin, Latitude_End,
                                                                                 Longitude_Begin, Longitude_End)
-    nx, ny, nz = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
-                                         (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                         Sampling, None, True)
+    this_filename, extension = splitext(address)
+    if extension.lower() == '.nc':
+        nx, ny, nz = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
+                                             (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
+                                             Sampling, Roughness, extent=True)
+    elif extension.lower() == '.csv':
+        nx, ny, nz = lib.read_geocsv_model_2d(address,
+                                              (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
+                                              Sampling, Roughness, extent=True)
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0,nx, 0,ny, 0,nz+1])
