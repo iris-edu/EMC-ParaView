@@ -261,7 +261,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def read_geocsv(file_name):
+def read_geocsv(file_name, is_2d=False):
     """read a given GeoCSV file and output a dictionary of the header keys along with a text
     block of the data body
 
@@ -297,14 +297,17 @@ def read_geocsv(file_name):
                 found_header = True
                 continue
             data.append(this_line)
+
+    # set the default columns
     if 'latitude_column' not in params.keys():
         params['latitude_column'] = 'latitude'
     if 'longitude_column' not in params.keys():
         params['longitude_column'] = 'longitude'
-    if 'elevation_column' not in params.keys():
-        params['elevation_column'] = 'elevation'
-    if 'depth_column' not in params.keys():
-        params['depth_column'] = 'depth'
+    if not is_2d:
+        if 'elevation_column' not in params.keys():
+            params['elevation_column'] = 'elevation'
+        if 'depth_column' not in params.keys():
+            params['depth_column'] = 'depth'
         
     return params, data
 
@@ -632,7 +635,7 @@ def get_column(matrix, column_index):
     return [row[column_index] for row in matrix]
 
 
-def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
+def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, inc, extent=False):
     """Read in a 3-D Earth model in the GeoCSV format.
 
       Keyword arguments:
@@ -642,6 +645,7 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
       depth_min: minimum depth
       depth_max: maximum depth
       inc: grid sampling interval
+      extent: provide model extent only (True or False)
 
       Return values:
       x: x-coordinate  normalized to the radius of the Earth
@@ -652,7 +656,6 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
 
     # model data and metadata
     import numpy as np
-    import csv
     from operator import itemgetter
 
     (params, lines) = read_geocsv(model_file)
@@ -675,7 +678,6 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
 
     # index to the variables
     var_index = {}
-    print(params['header'])
     for i, val in enumerate(params['header']):
         if val == depth_variable:
             depth_index = i
@@ -686,25 +688,40 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
         else:
             var_index[val] = i
 
-    lat = list(set(get_column(data, lat_index)))
-    lon = list(set(get_column(data, lon_index)))
-    lon = utils.lon_180(lon)
+    lat = np.array(list(set(get_column(data, lat_index))), dtype=float)
+    lon = np.array(list(set(get_column(data, lon_index))), dtype=float)
 
-    depth = list(set(get_column(data, depth_index)))
+    # -180/180 models are the norm, so we convert 0/360 models to -180/180 first to unify
+    # the rest of the code for all models
+    data = np.ndarray.tolist(np.asfarray(data))
+    if utils.lon_is_360(lon):
+        for i, values in enumerate(data):
+            if float(values[lon_index]) > 180.0:
+                data[i][lon_index] = float(values[lon_index]) - 360.0
+        lon = np.array(list(set(get_column(data, lon_index))), dtype=float)
 
-    # get coordinates sorted otherwise inc will not function properly
-    lat.sort(key=float)
-    lon.sort(key=float)
-    depth.sort(key=float)
+    # we want the grid to be in x, y z order (longitude, depth, latitude)
+    data.sort(key=itemgetter(lon_index, depth_index, lat_index))
 
-    # select the values within the ranges (this is to get a count only)
+    lon.sort()
+    lon, lon_map = utils.lon_180(lon, fix_gap=True)
+    depth = np.array(list(set(get_column(data, depth_index))), dtype=float)
+
+    # get coordinates sorted one last time
+    lat.sort()
+    lon.sort()
+    depth.sort()
+
+    # select the coordinates within the ranges (this is to get a count only)
     latitude = []
     longitude = []
     depth2 = []
     last_i = -1
+
     for i, lon_val in enumerate(lon):
         if i != 0 and i != len(lon) - 1 and i != last_i + inc:
             continue
+
         last_i = i
         for j, depth_val in enumerate(depth):
             last_k = -1
@@ -713,12 +730,11 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
                     continue
                 last_k = k
 
-                if utils.isValueIn(float(lat_val), ll[0], ur[0]) and utils.isLongitudeIn(float(lon_val),
-                                                                                         ll[1],
-                                                                                         ur[1]) and \
+                if utils.isValueIn(float(lat_val), ll[0], ur[0]) and utils.isLongitudeIn(
+                        float(lon_val), ll[1], ur[1]) and \
                         utils.isValueIn(float(depth_val), depth_min, depth_max):
-                    if float(lon_val) not in longitude:
-                        longitude.append(float(lon_val))
+                    if float(lon_map[utils.float_key(lon_val)]) not in longitude:
+                        longitude.append(float(lon_map[utils.float_key(lon_val)]))
                     if float(depth_val) not in depth2:
                         depth2.append(float(depth_val))
                     if float(lat_val) not in latitude:
@@ -738,20 +754,18 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
     Y = np.zeros((nx, ny, nz))
     Z = np.zeros((nx, ny, nz))
 
-    # we want the grid to be in x, y z order (longitude, depth, latitude)
-    data = np.ndarray.tolist(np.asfarray(data))
-    data.sort(key=itemgetter(lat_index, depth_index, lon_index))
     for i, values in enumerate(data):
-        lon_val = float(values[lon_index])
+        lon_val = float(lon_map[utils.float_key(values[lon_index])])
         lat_val = float(values[lat_index])
         depth_val = float(values[depth_index])
 
         if lon_val in longitude and lat_val in latitude and depth_val in depth2:
-            meta['lon'] = [min(meta['lon'][0], lon_val), max(meta['lon'][0], lon_val)]
+            meta['lon'] = [min(meta['lon'][0], lon_val),
+                           max(meta['lon'][0], lon_val)]
             meta['lat'] = [min(meta['lat'][0], lat_val), max(meta['lat'][0], lat_val)]
             if depth_val not in meta['depth']:
                 meta['depth'].append(depth_val)
-            x, y, z = llz2xyz(lat_val, lon_val, depth_val * depthFactor)
+            x, y, z = llz2xyz(lat_val, lon_val, depth_val * roughness)
 
             ii = longitude.index(lon_val)
             jj = depth2.index(depth_val)
@@ -768,8 +782,8 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, inc, extent):
     return X, Y, Z, V, meta
 
 
-def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll, ur, depth_min, depth_max, inc,
-                      extent=False):
+def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll, ur, depth_min, depth_max,
+                      roughness, inc, extent=False):
     """read in an EMC Earth model in the netCDF format
 
       Keyword arguments:
@@ -814,7 +828,7 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
 
     lat = data.variables[lat_variable][:].copy()
     lon = data.variables[lon_variable][:].copy()
-    lon = utils.lon_180(lon)
+    lon, lon_map = utils.lon_180(lon, fix_gap=True)
 
     depth = data.variables[depth_variable][:].copy()
 
@@ -846,8 +860,7 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
                         meta['lat'] = [min(meta['lat'][0], lat_val), max(meta['lat'][0], lat_val)]
                         if depth_val not in meta['depth']:
                             meta['depth'].append(depth_val)
-                        x, y, z = llz2xyz(lat_val, lon_val, depth_val * depthFactor)
-
+                        x, y, z = llz2xyz(lat_val, lon_val, depth_val * roughness)
                         ii = longitude.index(lon_val)
                         jj = depth2.index(depth_val)
                         kk = latitude.index(lat_val)
@@ -867,16 +880,16 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
     return X, Y, Z, V, meta
 
 
-def read_geocsv_model_2d(model_file, lat_variable, lon_variable, variable, ll, ur, inc, set_depth, extent):
+def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, extent=False):
     """Read in a 3-D Earth model in the GeoCSV format.
 
       Keyword arguments:
       model_file: model file
       ll: lower-left coordinate
       ur: upper-right coordinate
-      depth_min: minimum depth
-      depth_max: maximum depth
       inc: grid sampling interval
+      roughness: set the variable as depth and use this for exaggeration
+      extent: should only compute model extent? (True or False)
 
       Return values:
       x: x-coordinate  normalized to the radius of the Earth
@@ -890,7 +903,7 @@ def read_geocsv_model_2d(model_file, lat_variable, lon_variable, variable, ll, u
     import csv
     from operator import itemgetter
 
-    (params, lines) = read_geocsv(model_file)
+    (params, lines) = read_geocsv(model_file, is_2d=True)
 
     # model data
     raw_data = []
@@ -901,21 +914,27 @@ def read_geocsv_model_2d(model_file, lat_variable, lon_variable, variable, ll, u
     # model variables
     variables = []
     for this_param in params.keys():
-        if params[this_param] not in (lon_variable, lat_variable
+        if params[this_param] not in (params['longitude_column'], params['latitude_column']
                                       ) and '_column' in this_param:
             variables.append(params[this_param])
 
     # index to the variables
     var_index = {}
     for i, val in enumerate(params['header']):
-        if val == lon_variable:
+        if val == params['longitude_column']:
             lon_index = i
-        elif val == lat_variable:
+        elif val == params['latitude_column']:
             lat_index = i
+        else:
+            for this_var in variables:
+                if val == params[this_var + '_column']:
+                    var_index[this_var] = i
+                    break
 
     lat = list(set(get_column(data, lat_index)))
     lon = list(set(get_column(data, lon_index)))
-    lon = utils.lon_180(lon)
+    lon.sort(key=float)
+    lon, lon_map = utils.lon_180(lon, fix_gap=True)
 
     depth = [0]
 
@@ -936,49 +955,46 @@ def read_geocsv_model_2d(model_file, lat_variable, lon_variable, variable, ll, u
 
     meta = {'depth': [], 'lat': [100, -100], 'lon': [400, -400], 'source': model_file}
 
-    index = [-1, -1, -1]
+    for l, var_val in enumerate(variables):
+        X = np.zeros((nx, ny, nz))
+        Y = np.zeros((nx, ny, nz))
+        Z = np.zeros((nx, ny, nz))
 
-    X = np.zeros((nx, ny, nz))
-    Y = np.zeros((nx, ny, nz))
-    Z = np.zeros((nx, ny, nz))
-
-    # we want the grid to be in x, y z order (longitude, depth, latitude)
-    data.sort(key=itemgetter(lat_index, lon_index))
-    for i, values in enumerate(data):
-        lon_val = float(values[lon_index])
-        lat_val = float(values[lat_index])
-        this_value = depth[0]
-        if set_depth is None:
+        # we want the grid to be in x, y z order (longitude, depth, latitude)
+        data.sort(key=itemgetter(lat_index, lon_index))
+        for i, values in enumerate(data):
+            lon_val = float(values[lon_index])
+            lat_val = float(values[lat_index])
+            this_value = float(values[var_index[var_val]])
             if this_value is None:
                 depth_val = 0
             else:
-                depth_val = float(this_value)
-        else:
-            depth_val = float(this_value)
+                depth_val = float(this_value) * float(roughness)
 
-        if lon_val in longitude and lat_val in latitude and depth_val in depth2:
-            meta['lon'] = [min(meta['lon'][0], lon_val), max(meta['lon'][0], lon_val)]
-            meta['lat'] = [min(meta['lat'][0], lat_val), max(meta['lat'][0], lat_val)]
-            if depth_val not in meta['depth']:
-                meta['depth'].append(depth_val)
-            x, y, z = llz2xyz(lat_val, lon_val, depth_val * depthFactor)
+            if lon_val in longitude and lat_val in latitude:
+                meta['lon'] = [min(meta['lon'][0], float(lon_map[utils.float_key(values[lon_index])])),
+                               max(meta['lon'][0], float(lon_map[utils.float_key(values[lon_index])]))]
+                meta['lat'] = [min(meta['lat'][0], lat_val), max(meta['lat'][0], lat_val)]
+                if depth_val not in meta['depth']:
+                    meta['depth'].append(depth_val)
+                x, y, z = llz2xyz(lat_val, float(lon_map[utils.float_key(values[lon_index])]), depth_val)
 
-            ii = longitude.index(lon_val)
-            jj = depth2.index(depth_val)
-            kk = latitude.index(lat_val)
-            X[ii, jj, kk] = x
-            Y[ii, jj, kk] = y
-            Z[ii, jj, kk] = z
+                ii = longitude.index(lon_val)
+                jj = 0
+                kk = latitude.index(lat_val)
+                X[ii, jj, kk] = x
+                Y[ii, jj, kk] = y
+                Z[ii, jj, kk] = z
 
-            for l, var_val in enumerate(variables):
                 if var_val not in V.keys():
                     V[var_val] = np.zeros((nx, ny, nz))
-                V[var_val][ii, jj, kk] = float(values[var_index[var_val]])
+                V[var_val][ii, jj, kk] = float(this_value)
 
     return X, Y, Z, V, meta
 
 
-def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur, inc, set_depth, extent):
+def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur, inc, roughness,
+                        extent=False):
     """read in an EMC 2D in the netCDF format
 
       Keyword arguments:
@@ -988,6 +1004,8 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
       depth_min: minimum depth
       depth_max: maximum depth
       inc: grid sampling interval
+      roughness: set the variable as depth and use this for exaggeration
+      extent: should only compute model extent? (True or False)
 
       Return values:
       x: x-coordinate  normalized to the radius of the Earth
@@ -1019,10 +1037,9 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
             lon_index = i
         else:
             lat_index = i
-
     lat = data.variables[lat_variable][:].copy()
     lon = data.variables[lon_variable][:].copy()
-    lon = utils.lon_180(lon)
+    lon, lon_map = utils.lon_180(lon, fix_gap=True)
 
     depth = [0]
 
@@ -1040,6 +1057,10 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
     index = [-1, -1, -1]
     meta = {'depth': [], 'lat': [100, -100], 'lon': [400, -400], 'source': model_file}
     for l, var_val in enumerate(variables):
+        missing_value = None
+        if hasattr(data.variables[var], 'missing_value'):
+            missing_value = float(data.variables[var].missing_value)
+
         X = np.zeros((nx, ny, nz))
         Y = np.zeros((nx, ny, nz))
         Z = np.zeros((nx, ny, nz))
@@ -1064,31 +1085,33 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
                         kk = latitude.index(lat_val)
 
                         this_value = data_in[index[0]][index[1]]
-                        if abs(this_value) == 9999:
-                            this_value = None
+
                         if this_value is None:
                             v[ii, jj, kk] = None
-                        else:
-                            v[ii, jj, kk] = float(this_value)
-                        if set_depth is None:
-                            if this_value is None:
-                                depth_val = 0
+                        elif this_value is not None:
+                            if this_value == missing_value:
+                                v[ii, jj, kk] = None
+                                this_value = None
                             else:
-                                depth_val = float(this_value)
+                                v[ii, jj, kk] = this_value
                         else:
-                            depth_val = float(this_value)
-                        x, y, z = llz2xyz(lat_val, lon_val, depth_val * depthFactor)
+                            v[ii, jj, kk] = this_value
+
+                        if this_value is None:
+                            depth_val = 0
+                        else:
+                            depth_val = float(this_value) * float(roughness)
+                        x, y, z = llz2xyz(lat_val, lon_val, depth_val)
 
                         X[ii, jj, kk] = x
                         Y[ii, jj, kk] = y
                         Z[ii, jj, kk] = z
-
         V[var_val] = v
     data.close()
     return X, Y, Z, V, meta
 
 
-def read_topo_file(model_file, ll, ur, inc, extent):
+def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, extent=False):
     """read in etopo5, a 2-D netCDF topo file
 
     Keyword arguments:
@@ -1096,6 +1119,8 @@ def read_topo_file(model_file, ll, ur, inc, extent):
     ll: lower-left coordinate
     ur: upper-right coordinate
     inc: grid sampling interval
+    roughness: set the variable as depth and use this for exaggeration
+    extent: should only compute model extent? (True or False)
 
     RReturn values:
     X: x-coordinate  normalized to the radius of Earh
@@ -1109,7 +1134,7 @@ def read_topo_file(model_file, ll, ur, inc, extent):
     try:
         from scipy.io import netcdf
     except OSError:
-        print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
+        print "[ERROR] Sorry, cannot read netCDF files on this platform!"
         raise
 
     z_variable = 'elev'
@@ -1156,7 +1181,8 @@ def read_topo_file(model_file, ll, ur, inc, extent):
                         ii = longitude.index(lon_val)
                         jj = depth2.index(depth_val)
                         kk = latitude.index(lat_val)
-                        x, y, z = llz2xyz(lat[k], lon[i], elevation_data[k][i] * depthFactor / 1000.0)
+                        # "-" since it is elevation so we will be consistent with other models
+                        x, y, z = llz2xyz(lat_val, lon_val, depth_val - (elevation_data[k][i] * roughness / 1000.0))
                         X[ii, jj, kk] = x
                         Y[ii, jj, kk] = y
                         Z[ii, jj, kk] = z
