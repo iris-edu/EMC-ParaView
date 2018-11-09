@@ -75,7 +75,7 @@ def RequestData():
     if not fileFound:
         raise Exception('volcano file "' + address +
                         '" not found! Please provide the full path or UR for the file. Aborting.')
-    (params,lines) = lib.read_geocsv(address)
+    (params, lines) = lib.read_geocsv(address)
 
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area,
                                                                                 Latitude_Begin, Latitude_End,
@@ -83,53 +83,52 @@ def RequestData():
     Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)" % (lib.areaValues[Area], Latitude_Begin, Latitude_End,
                                                            Longitude_Begin, Longitude_End)
 
-    pdo = self.GetOutput() # vtkPoints
-    count = 0
-    latIndex = 0
-    lonIndex = 1
+    pdo = self.GetOutput()  # vtkPoints
+    lat_index = 0
+    lon_index = 1
 
     column_keys = lib.columnKeys
     for key in lib.columnKeys.keys():
         if key in params.keys():
             column_keys[key] = params[key]
 
-    delimiter  = params['delimiter'].strip()
+    delimiter = params['delimiter'].strip()
     
     origin = None
     if 'source' in params:
         origin = params['source']
         if len(Label.strip()) <= 0:
             Label = origin
-    header = lines[0].strip()
-    fields = header.split(delimiter)
+
+    fields = params['header']
     for i in range(len(fields)):
-          if fields[i].strip().lower() == column_keys['longitude_column'].lower():
-             lonIndex = i
-          elif fields[i].strip().lower() == column_keys['latitude_column'].lower():
-             latIndex = i
-          elif fields[i].strip().lower() == column_keys['elevation_column'].lower():
-             elevIndex = i
-    for i in range(1, len(lines)):
-       line = lines[i].strip()
-       values = line.strip().split(params['delimiter'].strip())
-       try:
-          lat = float(values[latIndex])
-          lon = float(values[lonIndex])
-       except:
-          continue
-       if len(values[elevIndex].strip()) <= 0:
-          depth = 0.0
-       else:
-         try:
-            depth = -1 * float(values[elevIndex]) / 1000.0
-         except:
+        if fields[i].strip().lower() == column_keys['longitude_column'].lower():
+            lon_index = i
+        elif fields[i].strip().lower() == column_keys['latitude_column'].lower():
+            lat_index = i
+        elif fields[i].strip().lower() == column_keys['elevation_column'].lower():
+            elev_index = i
+
+    for i, line in enumerate(lines):
+        line = line.strip()
+        values = line.split(delimiter)
+        try:
+            lat = float(values[lat_index])
+            lon = float(values[lon_index])
+        except:
             continue
-       if Latitude_Begin <= lat <= Latitude_End and Longitude_Begin <= lon <= Longitude_End:
-          x, y, z = lib.llz2xyz(lat, lon, depth)
-          pts.InsertNextPoint(x, y, z)
+        if len(values[elev_index].strip()) <= 0:
+            depth = 0.0
+        else:
+            try:
+                depth = -1 * float(values[elev_index]) / 1000.0
+            except:
+                continue
+        if Latitude_Begin <= lat <= Latitude_End and Longitude_Begin <= lon <= Longitude_End:
+            x, y, z = lib.llz2xyz(lat, lon, depth)
+            pts.InsertNextPoint(x, y, z)
     pdo.SetPoints(pts)
 
-    done = False
     simple.RenameSource(' '.join(['Volcano locations:', Label.strip(), Label2.strip()]))
 
     view = simple.GetActiveView()
@@ -153,7 +152,7 @@ def RequestData():
     data = vtk.vtkStringArray()
     data.SetName('Source')
     if origin is not None:
-       data.InsertNextValue(origin)
+        data.InsertNextValue(origin)
 
     data.InsertNextValue(source)
     fieldData.AddArray(data)
@@ -171,12 +170,13 @@ def RequestInformation():
         query = '?'.join([lib.volcanoLocationsKeys[Data_Source], query])
         fileFound, address, source = lib.find_file(volcanoFile, loc='EMC_VOLCANOES_PATH', query=query)
     else:
-       fileFound, address, source = lib.find_file(Alternate_FileName, loc='EMC_VOLCANOES_PATH')
+        fileFound, address, source = lib.find_file(Alternate_FileName, loc='EMC_VOLCANOES_PATH')
 
     if not fileFound:
         raise Exception('volcano file "' + address +
                         '" not found! Please provide the full path or UR for the file. Aborting.')
     (params, lines) = lib.read_geocsv(address)
     num = len(lines)
+
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0, num - 1, 0, num - 1, 0, num - 1])
