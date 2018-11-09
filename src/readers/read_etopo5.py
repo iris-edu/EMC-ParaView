@@ -23,10 +23,12 @@ OutputDataType = 'vtkStructuredGrid'
 
 Properties = dict(
     Area=1,
+    File_Name='ETOPO5',
     Latitude_Begin='',
     Latitude_End='',
     Longitude_Begin='',
     Longitude_End='',
+    Roughness=0,
     Sampling=20
 )
 
@@ -38,29 +40,39 @@ def RequestData():
     import numpy as np
     import csv
     import os
+    from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
 
-    FileName = lib.etopo5File
-
     # make sure we have input files
-    fileFound, address, source = lib.find_file(FileName, loc='EMC_MODELS_PATH')
+    file_found, address, source = lib.find_file(File_Name, loc='EMC_MODELS_PATH')
 
-    if not fileFound:
+    if not file_found:
         raise Exception('Etopo5 file "'+address+'" not found! Aborting.')
 
-    filename = lib.file_name(FileName)
+    this_filename, extension = splitext(address)
 
-    sg = self.GetOutput() # vtkPolyData
+    sg = self.GetOutput()  # vtkPolyData
 
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
-                                                                               Longitude_Begin, Longitude_End)
+                                                                                   Longitude_Begin, Longitude_End)
 
     Label2 = " - %s (%0.1f,%0.1f,%0.1f,%0.1f)" % (lib.areaValues[Area], Latitude_Begin, Latitude_End, Longitude_Begin,
                                                   Longitude_End)
 
-    X, Y, Z, V, label = lib.read_topo_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                           Sampling, False)
+    if extension.lower() == '.nc':
+
+        X, Y, Z, V, label = lib.read_netcdf_topo_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
+                                                                                                   Longitude_End),
+                                                      Sampling, Roughness,  extent=False)
+
+    elif extension.lower() == '.csv':
+        X, Y, Z, V, label = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
+                                                                                                  Longitude_End),
+                                                     Sampling, Roughness, extent=False)
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+
     nx = len(X)
     ny = len(X[0])
     nz = len(X[0][0])
@@ -119,6 +131,7 @@ def RequestData():
 
 def RequestInformation():
     sys.path.insert(0, "EMC_SRC_PATH")
+    from os.path import splitext
     import IrisEMC_Paraview_Lib as lib
     from paraview import util
 
@@ -126,8 +139,16 @@ def RequestInformation():
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                Longitude_Begin, Longitude_End)
 
-    nx, ny, nz = lib.read_topo_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                    Sampling, True)
-
+    this_filename, extension = splitext(address)
+    if extension.lower() == '.nc':
+        nx, ny, nz = lib.read_netcdf_topo_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
+                                                                                            Longitude_End),
+                                               Sampling, Roughness, extent=True)
+    elif extension.lower() == '.csv':
+        nx, ny, nz = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
+                                                                                           Longitude_End),
+                                              Sampling, Roughness, extent=True)
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0, nx, 0, ny, 0, nz])
