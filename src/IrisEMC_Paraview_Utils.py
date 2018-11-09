@@ -29,19 +29,51 @@
 """
 
 import os
+import numpy as np
 from time import time
 
 
-def str2float(sequence):
+def min_max(these_values):
+    """find min and max of a list or numpy array
 
+    Keyword arguments:
+        these_values: values to search
+
+    Return values:
+        this_min: minimum value
+        this_max: maximum value
+    """
+    if type(these_values) is list:
+        this_min = min(these_values)
+        this_max = max(these_values)
+    else:
+        this_min = np.min(these_values)
+        this_max = np.max(these_values)
+    return this_min, this_max
+
+
+def float_key(this_float, this_format='%0.4f'):
+    """" creates a key for a dictionary based on a given value
+
+    Keyword arguments:
+        this_float: given float number
+        this_format: format to use to construct the key
+
+    Return values:
+        the corresponding depth_key string
+    """
+    return this_format % float(this_float)
+
+
+def str2float(sequence):
     """convert content of a sequence to float, otherwise leave them
     as string
 
     Keyword arguments:
-    sequence: a sequence of values to convert
+        sequence: a sequence of values to convert
 
     Return values:
-    a generator of the converted sequence
+        a generator of the converted sequence
     """
 
     for item in sequence:
@@ -51,37 +83,102 @@ def str2float(sequence):
             yield item
 
 
-def lon_180(lon):
+def lon_is_360(lon):
+    """checks longitude values to determine if they represent 0/360 range
 
+    Keyword arguments:
+        lon: list of longitudes to check
+
+    Return values:
+        boolean: True or False
+    """
+    if isinstance(lon, float) or isinstance(lon, int) or isinstance(lon, np.float64):
+        if float(lon) > 180.0:
+            return True
+        else:
+            return False
+    else:
+        lon_min, lon_max = min_max(lon)
+        if lon_min >= 0.0 and lon_max > 180.0:
+            return True
+        else:
+            return False
+
+
+def lon_180(lon, fix_gap=False):
     """convert longitude values from 0/360 to -180/180
 
     Keyword arguments:
-    lon: list of longitudes to check and convert
+        lon: list of longitudes to check and convert
 
     Return values:
-    lon: updates longitudes
+        lon: updated longitudes
+        lon_map: mapping between old and new longitudes
     """
 
-    if type(lon) is int or type(lon) is float:
+    lon_360 = lon_is_360(lon)
+    lon_map = {}
+
+    lon_start, lon_end = min_max(lon)
+    lon_start_index = np.argmin(lon)
+    lon_end_index = np.argmax(lon)
+
+    if isinstance(lon, float) or isinstance(lon, int) or isinstance(lon, np.float64):
         if float(lon) > 180.0:
-            lon = float(lon) - 360.0
+            this_lon = float(lon) - 360.0
+            lon_map[float_key(lon)] = this_lon
+            lon = this_lon
 
     else:
-        for i, lon_value in enumerate(lon):
-            if float(lon_value) > 180.0:
-                lon[i] = float(lon_value) - 360.0
 
-    return lon
+        grid = abs(sorted(lon)[1] - sorted(lon)[0])
+
+        for lon_val in lon:
+            lon_map[float_key(lon_val)] = float(lon_val)
+
+        if lon_360:
+            for i, lon_value in enumerate(lon):
+                this_lon = float(lon_value)
+                if this_lon > 180.0:
+                    lon[i] = this_lon - 360.0
+                    lon_map[float_key(lon_value)] = lon[i]
+                    lon_map[float_key(lon[i])] = lon[i]
+                else:
+                    lon[i] = this_lon
+                    lon_map[float_key(lon_value)] = lon[i]
+
+        # this logic tries to address the gap at -180/180  or 0/360 longitudes. If the start and end longitudes
+        # are within one grid away from each other they are moved closer to closed the gap.
+        if fix_gap:
+            if 360.0 - abs(lon_end - lon_start) <= grid:
+                if lon_360:
+                    lon_0 = -0.0009
+                    lon_1 = 0.0
+                else:
+                   lon_0 = -179.9999
+                   lon_1 = 179.9999
+                lon_map[float_key(lon[lon_start_index])] = lon_0
+                lon_map[float_key(lon[lon_end_index])] = lon_1
+                lon_map[float_key(lon_start)] = lon_0
+                lon_map[float_key(lon_end)] = lon_1
+                lon_map[float_key(lon_0)] = lon_0
+                lon_map[float_key(lon_1)] = lon_1
+                lon[lon_start_index] = lon_0
+                lon[lon_end_index] = lon_1
+    if fix_gap:
+        return lon, lon_map
+    else:
+        return lon
 
 
 def checkPath(path):
     """check path to see if it exists
 
     Keyword arguments:
-    path: directory path to check
+        path: directory path to check
 
     Return values:
-    bool: True or False
+        bool: True or False
     """
     if os.path.exists(path):
         return path
@@ -93,12 +190,12 @@ def isValueIn(value, value_min, value_max):
     """"check a value to see if it is within limits
 
     Keyword arguments:
-    value: value to check
-    value_min: minimum acceptable value
-    value_max: maximum acceptable value
+        value: value to check
+        value_min: minimum acceptable value
+        value_max: maximum acceptable value
 
     Return values:
-    bool: True or False
+        bool: True or False
     """
     if float(value) < float(value_min) or float(value) > float(value_max):
         return False
@@ -106,16 +203,16 @@ def isValueIn(value, value_min, value_max):
         return True
 
 
-def isLongitudeIn(longitude,lon_min,lon_max):
+def isLongitudeIn(longitude, lon_min, lon_max):
     """check a longitude to see if it is within the box
 
     Keyword arguments:
-    longitude: longitude to check
-    lon_min: minimum acceptable longitude
-    lon_max: maximum acceptable longitude
+        longitude: longitude to check
+        lon_min: minimum acceptable longitude
+        lon_max: maximum acceptable longitude
 
     Return values:
-    bool: True or False
+        bool: True or False
     """
 
     # validate based on min and max if regular
@@ -124,18 +221,18 @@ def isLongitudeIn(longitude,lon_min,lon_max):
         if lon_min <= longitude <= lon_max:
             return True
         else:
-           return False
+            return False
 
     # move to 0-360 to avoid zero crossing and 180 crossing issues
     if lon_min <= 0:
         lon_min += 360
     if lon_max <= 0:
-         lon_max += 360
+        lon_max += 360
     if longitude <= 0:
-         longitude += 360
+        longitude += 360
 
     if longitude < lon_min or longitude > lon_max:
-            return False
+        return False
     return True
 
 
@@ -143,12 +240,12 @@ def getLons(lon_start, lon_end, inc):
     """create a list of longitudes from start to end
 
     Keyword arguments:
-    lon_start: starting longitude
-    lon_end: end longitude
-    inc: longitude increment
+        lon_start: starting longitude
+        lon_end: end longitude
+        inc: longitude increment
 
     Return values:
-    lon_list: longitude list
+        lon_list: longitude list
     """
 
     # move to 0-360 to avoid zero crossing and 180 crossing issues
@@ -174,11 +271,11 @@ def makePath(directory):
        create it. If needed, create all parent directories.
 
     Keyword arguments:
-    directory: directory to check
+        directory: directory to check
 
     Return values:
-    bool if directory does not exist
-    thisPath --- the path if exists
+        bool if directory does not exist
+        thisPath --- the path if exists
     """
 
     # the path must be an absolute path (start with "/")
@@ -196,12 +293,12 @@ def makePath(directory):
 def error(message, code=1, sender=None):
     """write an error message out in block format and return an exit code
 
-      Keyword arguments:
+     Keyword arguments:
       message: message to write
       code: code to return
       sender: sender of the message
 
-      Return values:
+    Return values:
       code: error code
     """
     line = "\n" + 100 * "*" + "\n"
@@ -255,14 +352,14 @@ def isLonValid(value, sender=None):
         return True
 
 
-def warning(message,sender=None):
+def warning(message, sender=None):
     """write a warning message out
 
-        Keyword arguments:
+    Keyword arguments:
         message: message to write
         sender: sender of the message
 
-        Return values:
+    Return values:
         code: error code
         message: message
         line: separator line
@@ -275,7 +372,7 @@ def warning(message,sender=None):
     print (code, message, line)
 
 
-def usage(script,paramPath):
+def usage(script, paramPath):
     """usage message for the 3D viewer
          Keyword arguments:
                script: sending script
