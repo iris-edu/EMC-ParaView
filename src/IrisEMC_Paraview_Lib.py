@@ -23,6 +23,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2018-12-06 Manoch: R.1.2018.340 R1 release supports OS X, Linux, and Windows
+    2018-11-12 Manoch: now find_file checks the OS to make sure .nc files are not requested on Windows platform
     2018-10-17 Manoch: R.1.2018.290 updates for R1
     2018-09-13 Manoch: R.0.2018.256 added support for 3D geoCSV files
     2018-05-09 Manoch: R.0.2018.129 added support for 2D netCDF files
@@ -44,12 +46,10 @@ import IrisEMC_Paraview_Utils as utils
 # parameters
 depthFactor = 1
 irisEMC_Files_URL = param.irisEMC_Files_URL
-usgsEvent_URL = param.usgsEvent_URL
 usgsSlab_URL = param.usgsSlab_URL
 pathDict = param.pathDict
 columnKeys = param.columnKeys
 filesDict = param.filesDict
-etopo5File = filesDict['ETOPO5']
 
 # USGS Slab 1.0
 usgsSlab_URL = param.usgsSlab_URL
@@ -62,6 +62,11 @@ usgsSlabRangeDict = param.usgsSlabRangeDict
 boundariesDict = param.boundariesDict
 boundaryKeys = param.boundaryKeys
 boundaryValues = param.boundaryValues
+
+# topo
+topoDict = param.topoDict
+topoKeys = param.topoKeys
+topoValues = param.topoValues
 
 # areas
 areaDict = param.areaDict
@@ -261,18 +266,18 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def read_geocsv(file_name, is_2d=False):
+def read_geocsv(gfile_name, is_2d=False):
     """read a given GeoCSV file and output a dictionary of the header keys along with a text
     block of the data body
 
     Keyword arguments:
-    file_name: the GeoCSV file to read
+    gfile_name: the GeoCSV file to read
 
     Return values:
     params: a dictionary of the key-value pairs found in the header
     data: a text block of the body
     """
-    fp = open(file_name, 'r')
+    fp = open(gfile_name, 'r')
     content = fp.read()
     lines = content.split('\n')
     fp.close()
@@ -345,7 +350,7 @@ def read_info_file(data_file):
             origin = data_file
             for line in lines:
                 if 'source:' in line:
-                    origin = line.replace('source:','')[1:].strip()
+                    origin = line.replace('source:', '')[1:].strip()
                     import urlparse
                     origin = urlparse.urlparse(origin).netloc
                     break
@@ -393,7 +398,7 @@ def is_url_valid(url):
         return False
 
 
-def get_file_from_url(url,path, filename=''):
+def get_file_from_url(url, path, filename=''):
     """get a file from the given URL and save it locally under a given file name
 
     Keyword arguments:
@@ -432,7 +437,7 @@ def get_file_from_url(url,path, filename=''):
     return False, destination, url
 
 
-def find_file(address, loc, query=''):
+def find_file(address, loc, query='', ext=None):
     """find a file either locally or via a URL
 
     Keyword arguments:
@@ -448,6 +453,16 @@ def find_file(address, loc, query=''):
     import urllib
 
     found = False
+
+    # for default files, the calling script sends the proper extension to use depending on the OS support
+    if ext is not None:
+        address = ''.join([address, ext])
+
+    if address.lower().endswith('.nc') and not utils.support_nc():
+        print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
+        return False, address, address
+    elif address.lower().endswith('.nc'):
+        from scipy.io import netcdf
 
     # it is a full path to a file?
     source = address
@@ -509,10 +524,8 @@ def find_file(address, loc, query=''):
 
         # did user provide a URL
         else:
-            source = address
             found, destination, origin = get_file_from_url(address, loc, query)
             return found, destination, origin
-    return False, address, source
 
 
 def llz2xyz(lat, lon, depth):
@@ -802,12 +815,12 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
     """
 
     import numpy as np
-    # ParaView on Windows does not have SciPy module
-    try:
-        from scipy.io import netcdf
-    except OSError:
+    # ParaView on some platforms does not have SciPy module
+    if not utils.support_nc():
         print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
-        raise
+        return [], [], [], [], {}
+    elif model_file.lower().endswith('.nc'):
+        from scipy.io import netcdf
 
     # NetCDF files, when opened read-only, return arrays that refer directly to memory-mapped data on disk:
     data = netcdf.netcdf_file(model_file, 'r')
@@ -880,7 +893,7 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
     return X, Y, Z, V, meta
 
 
-def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, extent=False):
+def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base=0, extent=False):
     """Read in a 3-D Earth model in the GeoCSV format.
 
       Keyword arguments:
@@ -900,7 +913,6 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, extent=False):
 
     # model data and metadata
     import numpy as np
-    import csv
     from operator import itemgetter
 
     (params, lines) = read_geocsv(model_file, is_2d=True)
@@ -935,8 +947,7 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, extent=False):
     lon = list(set(get_column(data, lon_index)))
     lon.sort(key=float)
     lon, lon_map = utils.lon_180(lon, fix_gap=True)
-
-    depth = [0]
+    depth = [base]
 
     # get coordinates sorted otherwise inc will not function properly
     lat.sort(key=float)
@@ -963,21 +974,20 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, extent=False):
         # we want the grid to be in x, y z order (longitude, depth, latitude)
         data.sort(key=itemgetter(lat_index, lon_index))
         for i, values in enumerate(data):
-            lon_val = float(values[lon_index])
+            lon_val = float(lon_map[utils.float_key(values[lon_index])])
             lat_val = float(values[lat_index])
             this_value = float(values[var_index[var_val]])
             if this_value is None:
-                depth_val = 0
+                depth_val = base
             else:
-                depth_val = float(this_value) * float(roughness)
+                depth_val = base + float(this_value) * float(roughness) * float(unit_factor)
 
             if lon_val in longitude and lat_val in latitude:
-                meta['lon'] = [min(meta['lon'][0], float(lon_map[utils.float_key(values[lon_index])])),
-                               max(meta['lon'][0], float(lon_map[utils.float_key(values[lon_index])]))]
+                meta['lon'] = [min(meta['lon'][0], lon_val), max(meta['lon'][0], lon_val)]
                 meta['lat'] = [min(meta['lat'][0], lat_val), max(meta['lat'][0], lat_val)]
                 if depth_val not in meta['depth']:
                     meta['depth'].append(depth_val)
-                x, y, z = llz2xyz(lat_val, float(lon_map[utils.float_key(values[lon_index])]), depth_val)
+                x, y, z = llz2xyz(lat_val, lon_val, depth_val)
 
                 ii = longitude.index(lon_val)
                 jj = 0
@@ -988,12 +998,12 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, extent=False):
 
                 if var_val not in V.keys():
                     V[var_val] = np.zeros((nx, ny, nz))
-                V[var_val][ii, jj, kk] = float(this_value)
+                V[var_val][ii, jj, kk] = float(this_value) * float(unit_factor)
 
     return X, Y, Z, V, meta
 
 
-def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur, inc, roughness,
+def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur, inc, roughness, base=0,
                         extent=False):
     """read in an EMC 2D in the netCDF format
 
@@ -1016,12 +1026,12 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
 
     import numpy as np
 
-    # ParaView on Windows does not have SciPy module
-    try:
-        from scipy.io import netcdf
-    except OSError:
+    # ParaView on some platforms does not have SciPy module
+    if not utils.support_nc:
         print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
-        raise
+        return [], [], [], [], {}
+    elif model_file.lower().endswith('.nc'):
+        from scipy.io import netcdf
 
     # NetCDF files, when opened read-only, return arrays that refer directly to memory-mapped data on disk:
     data = netcdf.netcdf_file(model_file, 'r')
@@ -1041,7 +1051,7 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
     lon = data.variables[lon_variable][:].copy()
     lon, lon_map = utils.lon_180(lon, fix_gap=True)
 
-    depth = [0]
+    depth = [base]
 
     # select the values within the ranges (this is to get a count only)
     latitude, longitude, depth2 = get_points_in_area(lat, lon, depth, ll, ur, inc)
@@ -1098,9 +1108,9 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
                             v[ii, jj, kk] = this_value
 
                         if this_value is None:
-                            depth_val = 0
+                            depth_val = base + 0
                         else:
-                            depth_val = float(this_value) * float(roughness)
+                            depth_val = base + float(this_value) * float(roughness)
                         x, y, z = llz2xyz(lat_val, lon_val, depth_val)
 
                         X[ii, jj, kk] = x
@@ -1111,8 +1121,9 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
     return X, Y, Z, V, meta
 
 
-def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, extent=False):
-    """read in etopo5, a 2-D netCDF topo file
+def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, lon_var='longitude', lat_var='latitude',
+                          elev_var='elevation', base=0, unit_factor=1, extent=False):
+    """read in etopo, a 2-D netCDF topo file
 
     Keyword arguments:
     model_file: model file
@@ -1130,18 +1141,18 @@ def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, extent=False):
     """
 
     import numpy as np
-    # ParaView on Windows does not have SciPy module
-    try:
-        from scipy.io import netcdf
-    except OSError:
+    # ParaView on some platforms does not have SciPy module
+
+    if not utils.support_nc():
         print "[ERROR] Sorry, cannot read netCDF files on this platform!"
-        raise
+        return 0, 0, 0
+    elif model_file.lower().endswith('.nc'):
+        from scipy.io import netcdf
 
-    z_variable = 'elev'
-    lon_variable = 'X'
-    lat_variable = 'Y'
-    depth = 0
-
+    z_variable = elev_var
+    lon_variable = lon_var
+    lat_variable = lat_var
+    depth = base
     # model data
     data = netcdf.netcdf_file(model_file, 'r')
     lat = data.variables[lat_variable][:].copy()
@@ -1165,7 +1176,11 @@ def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, extent=False):
     if extent:
         return nx - 1, ny - 1, nz - 1
 
-    label = data.description
+    label = ''
+    if hasattr(data, 'description'):
+        label = data.description
+    elif hasattr(data, 'title'):
+        label = data.title
 
     for l, var_value in enumerate(variables):
         X = np.zeros((nx, ny, nz))
@@ -1181,13 +1196,14 @@ def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, extent=False):
                         ii = longitude.index(lon_val)
                         jj = depth2.index(depth_val)
                         kk = latitude.index(lat_val)
-                        # "-" since it is elevation so we will be consistent with other models
-                        x, y, z = llz2xyz(lat_val, lon_val, depth_val - (elevation_data[k][i] * roughness / 1000.0))
+                        # "+" since it is elevation but we already making roughness negative to make it positive up
+                        x, y, z = llz2xyz(lat_val, lon_val, depth_val + (
+                                elevation_data[k][i] * roughness * unit_factor))
                         X[ii, jj, kk] = x
                         Y[ii, jj, kk] = y
                         Z[ii, jj, kk] = z
 
-                        v[ii, jj, kk] = elevation_data[k][i]
+                        v[ii, jj, kk] = elevation_data[k][i] * float(unit_factor)
 
     V[z_variable] = v
     return X, Y, Z, V, label
@@ -1210,12 +1226,12 @@ def read_slab_file(model_file, ll, ur, inc, extent):
     """
 
     import numpy as np
-    # ParaView on Windows does not have SciPy module
-    try:
-        from scipy.io import netcdf
-    except OSError:
+    # ParaView on some systems does not have SciPy module
+    if not utils.support_nc():
         print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
-        raise
+        return [], [], [], [], ''
+    elif model_file.lower().endswith('.nc') or model_file.lower().endswith('.grd'):
+        from scipy.io import netcdf
 
     z_variable = 'z'
     lon_variable = 'x'

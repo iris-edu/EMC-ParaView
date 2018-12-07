@@ -1,4 +1,4 @@
-2018-03-21
+2018-12-06
 
 IRIS_EMC_Paraview/src:
 ----------------------
@@ -16,7 +16,8 @@ IRIS_EMC_Paraview/src:
     IRIS EMC ParaView support Python library of utility functions called by the plugins
 
 - src/build_plugins_macros.py
-    A Python script to build the plugins. Anytime user modifies any of the python scripts, this script must be executed to update the plugins and macros
+    A Python script to build the plugins. Anytime user modifies any of the python scripts, this script must be executed
+    to update the plugins and macros
 
 - src/python_filter_generator.py
    A python script to wrap the existing Python scripts into an XML plugin

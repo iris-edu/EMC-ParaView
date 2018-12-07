@@ -20,6 +20,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  History:
+    2018-11-12 Manoch: added check_system to check OS
     2018-10-17 Manoch: R.1.2018.290 updates for R1
     2018-09-13 Manoch: R.0.2018.256 updated the isValueIn to ensure values are float
     2018-03-21 Manoch: R.0.2018.080 release for ParaView support
@@ -29,8 +30,53 @@
 """
 
 import os
+import platform
 import numpy as np
 from time import time
+
+
+def do_https():
+    """finds if secure HHTP is possible
+    Keyword arguments:
+        none
+
+    Return values:
+       bool
+    """
+
+    try:
+        import ssl
+        return True
+    except ImportError:
+        return False
+
+
+def support_nc():
+    """finds if scipy is available for reading netCDF file
+    Keyword arguments:
+        none
+
+    Return values:
+       bool
+    """
+
+    try:
+        import scipy
+        return True
+    except ImportError:
+        return False
+
+
+def check_system():
+    """find which OS the package is running under, so we can check for valid file types
+    Keyword arguments:
+        none
+
+    Return values:
+       operating system
+    """
+
+    return platform.system()
 
 
 def min_max(these_values):

@@ -415,23 +415,27 @@ def generatePythonFilterFromFiles(scriptFile, outputFile):
 
     usgsDropDownItems = ""
     for i in range(len(param.usgsSlabKeys)):
-        usgsDropDownItems += '<Entry value="%i" text="%s"/>\n'%(i,param.usgsSlabValues[i])
+        usgsDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.usgsSlabValues[i])
 
     earthquakeDropDownItems = ""
     for i in range(len(param.earthquakeKeys)):
-        earthquakeDropDownItems += '<Entry value="%i" text="%s"/>\n'%(i,param.earthquakeValues[i])
+        earthquakeDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.earthquakeValues[i])
 
     volcanoDropDownItems = ""
     for i in range(len(param.volcanoLocationsKeys)):
-        volcanoDropDownItems += '<Entry value="%i" text="%s"/>\n'%(i,param.volcanoLocationsValues[i])
+        volcanoDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.volcanoLocationsValues[i])
 
     boundaryDropDownItems = ""
     for i in range(len(param.boundaryKeys)):
-        boundaryDropDownItems += '<Entry value="%i" text="%s"/>\n'%(i,param.boundaryValues[i])
+        boundaryDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.boundaryValues[i])
+
+    topoDropDownItems = ""
+    for i in range(len(param.topoKeys)):
+        topoDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.topoValues[i])
 
     areaDropDownItems = ""
     for i in range(len(param.areaKeys)):
-        areaDropDownItems += '<Entry value="%i" text="%s"/>\n'%(i,param.areaValues[i])
+        areaDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.areaValues[i])
 
     xmlOutput = generatePythonFilter(namespace)
     for key in param.pathDict.keys():
@@ -442,19 +446,22 @@ def generatePythonFilterFromFiles(scriptFile, outputFile):
        xmlOutput = xmlOutput.replace(key,param.filesDict[key])
 
     if 'USGS_SLAB_DROP_DOWN' in xmlOutput:
-        xmlOutput = xmlOutput.replace('USGS_SLAB_DROP_DOWN',usgsDropDownItems)
+        xmlOutput = xmlOutput.replace('USGS_SLAB_DROP_DOWN', usgsDropDownItems)
      
     if 'EARTHQUAKE_DROP_DOWN' in xmlOutput:
-        xmlOutput = xmlOutput.replace('EARTHQUAKE_DROP_DOWN',earthquakeDropDownItems)
+        xmlOutput = xmlOutput.replace('EARTHQUAKE_DROP_DOWN', earthquakeDropDownItems)
 
     if 'VOLCANO_DROP_DOWN' in xmlOutput:
-        xmlOutput = xmlOutput.replace('VOLCANO_DROP_DOWN',volcanoDropDownItems)
+        xmlOutput = xmlOutput.replace('VOLCANO_DROP_DOWN', volcanoDropDownItems)
 
     if 'BOUNDARY_DROP_DOWN' in xmlOutput:
-        xmlOutput = xmlOutput.replace('BOUNDARY_DROP_DOWN',boundaryDropDownItems)
+        xmlOutput = xmlOutput.replace('BOUNDARY_DROP_DOWN', boundaryDropDownItems)
+
+    if 'TOPO_DROP_DOWN' in xmlOutput:
+        xmlOutput = xmlOutput.replace('TOPO_DROP_DOWN', topoDropDownItems)
 
     if 'AREA_DROP_DOWN' in xmlOutput:
-        xmlOutput = xmlOutput.replace('AREA_DROP_DOWN',areaDropDownItems)
+        xmlOutput = xmlOutput.replace('AREA_DROP_DOWN', areaDropDownItems)
 
     for key in param.filesDict.keys():
         xmlOutput = xmlOutput.replace(key,param.filesDict[key])

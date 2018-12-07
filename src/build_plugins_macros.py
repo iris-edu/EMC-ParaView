@@ -22,9 +22,11 @@
 #
 #     2018-03-21 Manoch:  R.0.2018.080
 #
+import sys
+import os
 import subprocess 
 import IrisEMC_Paraview_Param as param
-import sys, os
+import IrisEMC_Paraview_Utils as utils
 
 class bcolors:
     HEADER = '\033[95m'
@@ -59,6 +61,7 @@ def fileName(fullFileName):
     filename, file_extension = os.path.splitext(filename_w_ext)
     return filename
 
+print "\n\n installing under %s OS\n\n" % utils.check_system()
 #
 #  wrap READERS in XML
 #
@@ -71,7 +74,7 @@ for file in os.listdir("readers"):
 
     inputFile = os.path.join('readers',file)
     filename = fileName(file)
-    outputFile = os.path.join('..','plugins',filename+'.xml')
+    outputFile = os.path.join(param.pathDict['EMC_PLUGINS_PATH'],filename+'.xml')
     try:
       subprocess.check_output([sys.executable ,"python_filter_generator.py",inputFile,outputFile])
       print "++++ SUCCESS:",inputFile,"--->",outputFile
@@ -91,7 +94,7 @@ for file in os.listdir("filters"):
 
     inputFile = os.path.join('filters',file)
     filename = fileName(file)
-    outputFile = os.path.join('..','plugins',filename+'.xml')
+    outputFile = os.path.join(param.pathDict['EMC_PLUGINS_PATH'],filename+'.xml')
     try:
       subprocess.check_output([sys.executable ,"python_filter_generator.py",inputFile,outputFile])
       print "++++ SUCCESS:",inputFile,"--->",outputFile

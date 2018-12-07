@@ -23,6 +23,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2018-11-12 Manoch: added Platform check to load .csv files instead of .nc for Windows
     2018-10-17 Manoch: R.1.2018.290 updates for R1
     2018-09-13 Manoch: R.0.2018.256 added support for EMC_DEFAULT_GSV_MODEL
     2018-05-09 Manoch: R.0.2018.129 added EMC_DEFAULT_2DMODEL tp fileDict
@@ -34,6 +35,13 @@
 
 import os
 import IrisEMC_Paraview_Utils as utils 
+
+# see if SSL is available for HTTPS requests
+ssl_available = utils.do_https()
+HTTP_PROTOCOL = 'https:'
+if not ssl_available:
+    HTTP_PROTOCOL = 'http:'
+
 
 def sortDictByValue(thisDict):
     """Splits a Python dictionary to two lists containing keys and values sorted by values.
@@ -58,15 +66,29 @@ def sortDictByValue(thisDict):
 
 
 # URLs
-irisEMC_Files_URL = "https://ds.iris.edu/files/products/emc/emc-files/"
-usgsEvent_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=text"
-usgsSlab_URL = "https://earthquake.usgs.gov/static/lfs/data/slab/models/"
+irisEMC_Files_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
+
+# usgsEvent_URL = "%s//earthquake.usgs.gov/fdsnws/event/1/query?format=text" % HTTP_PROTOCOL
+
+if not ssl_available:
+    usgsSlab_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
+else:
+    usgsSlab_URL = "%s//earthquake.usgs.gov/static/lfs/data/slab/models/" % HTTP_PROTOCOL
 
 # earthquake catalogue sources
 # Note: at this time only GeoCSV format is supported for earthquake files
-earthquakeCatalogDict = {'https://earthquake.usgs.gov/fdsnws/event/1/query': 'USGS Earthquake Hazards Program'}
-earthquakeQuery = ("format=text&starttime=%s&minmag=%0.1f&maxmag=%0.1f&orderby=magnitude&mindepth=%0.1f&"""
-                   "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&limit=%0i&nodata=404")
+# Note: A temporary fix to deal with  SSL issue
+
+if not ssl_available:
+    earthquakeCatalogDict = {'%s//service.iris.edu/fdsnws/event/1/query' % HTTP_PROTOCOL:
+                             'IRIS DMC FDSNWS event Web Service'}
+    earthquakeQuery = ("format=text&starttime=%s&minmag=%0.1f&maxmag=%0.1f&orderby=magnitude&mindepth=%0.1f&"""
+                       "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
+else:
+    earthquakeCatalogDict = {'%s//earthquake.usgs.gov/fdsnws/event/1/query' % HTTP_PROTOCOL:
+                                 'USGS Earthquake Hazards Program'}
+    earthquakeQuery = ("format=text&starttime=%s&minmag=%0.1f&maxmag=%0.1f&orderby=magnitude&mindepth=%0.1f&"""
+                       "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 
 # sort the earthquake dictionary based on the values (organization)
 (earthquakeKeys, earthquakeValues) = sortDictByValue(earthquakeCatalogDict)
@@ -81,7 +103,7 @@ volcanoLocationsQuery = "getVolcanoLocations=true"
 # Paths
 topDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-pathDict = {'EMC_MAIN_PATH':topDir,
+pathDict = {'EMC_MAIN_PATH': topDir,
             'EMC_PLUGINS_PATH': os.path.join(topDir, 'plugins'),
             'EMC_MACROS_PATH': os.path.join(topDir, 'macros'),
             'EMC_SRC_PATH': os.path.join(topDir, 'src'),
@@ -97,43 +119,49 @@ for key in pathDict.keys():
     utils.makePath(pathDict[key])
 
 # default files
-filesDict = {'ETOPO5': 'etopo5.nc', 'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent.nc',
-             'EMC_DEFAULT_GSV_MODEL': 'wUS-SH-2010_percent.csv', 'EMC_DEFAULT_2DMODEL': 'CAM2016Litho.nc'}
+# NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
+#       '' is used to flag the need for update
+filesExtDict = {'ssl': '.nc', 'geo': '.csv'}
+filesDict = {'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent', 'EMC_DEFAULT_2DMODEL': 'CAM2016Litho'}
 
 # default column names for GeoCSV files. User can redefine these in the GeoCSV header
 columnKeys = {'latitude_column': 'latitude', 'longitude_column': 'longitude', 'depth_column': 'depth',
               'elevation_column': 'elevation', 'magnitude_column': 'magnitude'}
 
 # USGS Slab 1.0 files, will populate the drop down menu
-usgsSlabDict = {'alu_slab1.0_clip.grd': 'Alaska-Aleutians',
-                'cas_slab1.0_clip.grd': 'Cascadia',
-                'izu_slab1.0_clip.grd': 'Izu-Bonin',
-                'ker_slab1.0_clip.grd': 'Kermadec-Tonga',
-                'kur_slab1.0_clip.grd': 'Kamchatka/Kurils/Japan',
-                'mex_slab1.0_clip.grd': 'Central America',
-                'phi_slab1.0_clip.grd': 'Philippines',
-                'ryu_slab1.0_clip.grd': 'Ryukyu',
-                'sam_slab1.0_clip.grd': 'South America',
-                'sco_slab1.0_clip.grd': 'Scotia',
-                'sol_slab1.0_clip.grd': 'Solomon Islands',
-                'van_slab1.0_clip.grd': 'Santa Cruz Islands/Vanuatu/Loyalty Islands'}
+# NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
+#       '' is used to flag the need for update
+grd_ext = ''
+usgsSlabExtDict = {'ssl': '.grd', 'geo': '.csv'}
+usgsSlabDict = {'alu_slab1.0_clip%s' % grd_ext: 'Alaska-Aleutians',
+                'cas_slab1.0_clip%s' % grd_ext: 'Cascadia',
+                'izu_slab1.0_clip%s' % grd_ext: 'Izu-Bonin',
+                'ker_slab1.0_clip%s' % grd_ext: 'Kermadec-Tonga',
+                'kur_slab1.0_clip%s' % grd_ext: 'Kamchatka/Kurils/Japan',
+                'mex_slab1.0_clip%s' % grd_ext: 'Central America',
+                'phi_slab1.0_clip%s' % grd_ext: 'Philippines',
+                'ryu_slab1.0_clip%s' % grd_ext: 'Ryukyu',
+                'sam_slab1.0_clip%s' % grd_ext: 'South America',
+                'sco_slab1.0_clip%s' % grd_ext: 'Scotia',
+                'sol_slab1.0_clip%s' % grd_ext: 'Solomon Islands',
+                'van_slab1.0_clip%s' % grd_ext: 'Santa Cruz Islands/Vanuatu/Loyalty Islands'}
 
 # sort the SLAB dictionary based on the values (regions)
 (usgsSlabKeys, usgsSlabValues) = sortDictByValue(usgsSlabDict)
 
 # extent of the slab regions
-usgsSlabRangeDict = {'alu_slab1.0_clip.grd': {'X': (167., 216), 'Y': (50., 65.), 'Z': (-278.8, -6.264)},
-                     'cas_slab1.0_clip.grd': {'X': (-128.5, -120.5), 'Y': (39., 52.), 'Z': (100.18, -4.99)},
-                     'izu_slab1.0_clip.grd': {'X': (129., 148.), 'Y': (11., 40.), 'Z': (-686.764, -1.002)},
-                     'ker_slab1.0_clip.grd': {'X': (174., 188.), 'Y': (-39., -14.), 'Z': (-700.35, -2.81)},
-                     'kur_slab1.0_clip.grd': {'X': (129., 164.), 'Y': (32., 56.5), 'Z': (-724.18, -5.85)},
-                     'mex_slab1.0_clip.grd': {'X': (254., 279.), 'Y': (7., 21), 'Z': (-294.83, 0.402)},
-                     'phi_slab1.0_clip.grd': {'X': (122., 128.), 'Y': (7, 15), 'Z': (-224.68, -6.42)},
-                     'ryu_slab1.0_clip.grd': {'X': (122., 139), 'Y': (22., 38), 'Z': (-287.93, 0.78)},
-                     'sam_slab1.0_clip.grd': {'X': (278., 300.), 'Y': (-45., 5.), 'Z': (-742.32, 1.83)},
-                     'sco_slab1.0_clip.grd': {'X': (328., 337.), 'Y': (-61., -55.), 'Z': (-260.69, -4.88)},
-                     'sol_slab1.0_clip.grd': {'X': (145., 165.), 'Y': (-12., -2.), 'Z': (-616.65, -1.81)},
-                     'van_slab1.0_clip.grd': {'X': (164., 173.), 'Y': (-23.5, -9.), 'Z': (-331.3, -3.89)}}
+usgsSlabRangeDict = {'alu_slab1.0_clip%s' % grd_ext: {'X': (167., 216), 'Y': (50., 65.), 'Z': (-278.8, -6.264)},
+                     'cas_slab1.0_clip%s' % grd_ext: {'X': (-128.5, -120.5), 'Y': (39., 52.), 'Z': (100.18, -4.99)},
+                     'izu_slab1.0_clip%s' % grd_ext: {'X': (129., 148.), 'Y': (11., 40.), 'Z': (-686.764, -1.002)},
+                     'ker_slab1.0_clip%s' % grd_ext: {'X': (174., 188.), 'Y': (-39., -14.), 'Z': (-700.35, -2.81)},
+                     'kur_slab1.0_clip%s' % grd_ext: {'X': (129., 164.), 'Y': (32., 56.5), 'Z': (-724.18, -5.85)},
+                     'mex_slab1.0_clip%s' % grd_ext: {'X': (254., 279.), 'Y': (7., 21), 'Z': (-294.83, 0.402)},
+                     'phi_slab1.0_clip%s' % grd_ext: {'X': (122., 128.), 'Y': (7, 15), 'Z': (-224.68, -6.42)},
+                     'ryu_slab1.0_clip%s' % grd_ext: {'X': (122., 139), 'Y': (22., 38), 'Z': (-287.93, 0.78)},
+                     'sam_slab1.0_clip%s' % grd_ext: {'X': (278., 300.), 'Y': (-45., 5.), 'Z': (-742.32, 1.83)},
+                     'sco_slab1.0_clip%s' % grd_ext: {'X': (328., 337.), 'Y': (-61., -55.), 'Z': (-260.69, -4.88)},
+                     'sol_slab1.0_clip%s' % grd_ext: {'X': (145., 165.), 'Y': (-12., -2.), 'Z': (-616.65, -1.81)},
+                     'van_slab1.0_clip%s' % grd_ext: {'X': (164., 173.), 'Y': (-23.5, -9.), 'Z': (-331.3, -3.89)}}
 
 # Area
 areaDict = {'0': 'Africa',
@@ -180,3 +208,15 @@ boundariesColor= {'coastline_data_int.csv': '1,1,1',
 
 # sorted list of the boundary files based on values
 (boundaryKeys, boundaryValues) = sortDictByValue(boundariesDict)
+
+# Boundary files that will appear in the drop down menu
+# NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
+#       '' is used to flag the need for update
+grd_ext = ''
+topoExtDict = {'ssl': '.nc', 'geo': '.csv'}
+topoDict = {'GMTED2010_15n240_1000deg_dmc%s' % grd_ext: 'GMTED2010 elevation data: 1.000 degrees resolution',
+            'GMTED2010_15n120_0500deg_dmc%s' % grd_ext: 'GMTED2010 elevation data: 0.500 degrees resolution',
+            'GMTED2010_15n060_0250deg_dmc%s' % grd_ext: 'GMTED2010 elevation data: 0.250 degrees resolution'}
+
+# sorted list of the topo files based on values
+(topoKeys, topoValues) = sortDictByValue(topoDict)
