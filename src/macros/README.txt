@@ -1,4 +1,4 @@
-2018-03-21
+2018-12-06
 
 IRIS_EMC_Paraview/src/macros:
 -----------------------------
@@ -6,16 +6,14 @@ IRIS_EMC_Paraview/src/macros:
    designed to handle some specific tasks, such as plotting earthquakes using proper symbol type, size and color.
 
 - macro_coastlines.py
-   Draw low-resolution coastline on Americas and draw the state boundaries for US and Canada along with political boundaries
-
-- macro_convert_coordinates.py
-   A convenience tool to convers latitude, longitude and ,depth to X, Y and Z (Or Vice Versa)
+   Draw low-resolution coastline on Americas and draw the state boundaries for US and Canada along with political
+   boundaries
 
 - macro_earthquakes.py
    Plot the 200 largest earthquakes in the Americas since 2001-01-01 using USGS event service
 
-- macro_etopo5.py
-   Display surface elevation changes for Americas, using ETOPO5 elevation data file
+- macro_etopompy
+   Display surface elevation changes for Americas, using elevation data file
 
 - macro_grids.py
    Display latitude/longitude grids for Americas at 10 degrees intervals

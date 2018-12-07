@@ -1,4 +1,8 @@
-# R.0.2018.080
+# trace generated using paraview version 5.6.0-RC2
+#
+# To ensure correct image size when batch processing, please search 
+# for and uncomment the line `# renderView*.ViewSize = [*,*]`
+
 #### import the simple module from the paraview
 from paraview.simple import *
 #### disable automatic camera reset on 'Show'
@@ -7,13 +11,10 @@ paraview.simple._DisableFirstRenderCameraReset()
 # create a new 'Draw Grids'
 drawGrids1 = DrawGrids()
 
-# Properties modified on drawGrids1
-drawGrids1.GridSpacing = 10.0
-
 # get active view
 renderView1 = GetActiveViewOrCreate('RenderView')
 # uncomment following to set a specific view size
-# renderView1.ViewSize = [1501, 958]
+# renderView1.ViewSize = [1174, 944]
 
 # show data in view
 drawGrids1Display = Show(drawGrids1, renderView1)
@@ -21,36 +22,54 @@ drawGrids1Display = Show(drawGrids1, renderView1)
 # trace defaults for the display properties.
 drawGrids1Display.Representation = 'Surface'
 drawGrids1Display.ColorArrayName = [None, '']
-drawGrids1Display.OSPRayScaleArray = 'Grid Elevation (km),\nResolution & Spacing (deg)'
 drawGrids1Display.OSPRayScaleFunction = 'PiecewiseFunction'
 drawGrids1Display.SelectOrientationVectors = 'None'
-drawGrids1Display.ScaleFactor = 0.18537349700927735
+drawGrids1Display.ScaleFactor = 0.18508331179618837
 drawGrids1Display.SelectScaleArray = 'None'
 drawGrids1Display.GlyphType = 'Arrow'
 drawGrids1Display.GlyphTableIndexArray = 'None'
-drawGrids1Display.DataAxesGrid = 'GridAxesRepresentation'
-drawGrids1Display.PolarAxes = 'PolarAxesRepresentation'
-drawGrids1Display.GaussianRadius = 0.09268674850463868
+drawGrids1Display.GaussianRadius = 0.009254165589809418
 drawGrids1Display.SetScaleArray = [None, '']
 drawGrids1Display.ScaleTransferFunction = 'PiecewiseFunction'
 drawGrids1Display.OpacityArray = [None, '']
 drawGrids1Display.OpacityTransferFunction = 'PiecewiseFunction'
+drawGrids1Display.DataAxesGrid = 'GridAxesRepresentation'
+drawGrids1Display.SelectionCellLabelFontFile = ''
+drawGrids1Display.SelectionPointLabelFontFile = ''
+drawGrids1Display.PolarAxes = 'PolarAxesRepresentation'
+
+# init the 'GridAxesRepresentation' selected for 'DataAxesGrid'
+drawGrids1Display.DataAxesGrid.XTitleFontFile = ''
+drawGrids1Display.DataAxesGrid.YTitleFontFile = ''
+drawGrids1Display.DataAxesGrid.ZTitleFontFile = ''
+drawGrids1Display.DataAxesGrid.XLabelFontFile = ''
+drawGrids1Display.DataAxesGrid.YLabelFontFile = ''
+drawGrids1Display.DataAxesGrid.ZLabelFontFile = ''
+
+# init the 'PolarAxesRepresentation' selected for 'PolarAxes'
+drawGrids1Display.PolarAxes.PolarAxisTitleFontFile = ''
+drawGrids1Display.PolarAxes.PolarAxisLabelFontFile = ''
+drawGrids1Display.PolarAxes.LastRadialAxisTextFontFile = ''
+drawGrids1Display.PolarAxes.SecondaryRadialAxesTextFontFile = ''
 
 # reset view to fit data
 #renderView1.ResetCamera()
+
+# get the material library
+materialLibrary1 = GetMaterialLibrary()
 
 # update the view to ensure updated data information
 renderView1.Update()
 
 # Properties modified on drawGrids1Display
-drawGrids1Display.Opacity = 0.3
+drawGrids1Display.Opacity = 0.5
 
 #### saving camera placements for all active views
 
 # current camera placement for renderView1
-# renderView1.CameraPosition = [-0.05948430299758911, -0.5159335862845182, 5.451510239710665]
-# renderView1.CameraFocalPoint = [-0.05948430299758911, -0.5159335862845182, 0.0595984160900116]
-# renderView1.CameraParallelScale = 1.3955294694664888
+#renderView1.CameraPosition = [-0.059391170740127563, -0.515126028098166, 5.442962405261595]
+#renderView1.CameraFocalPoint = [-0.059391170740127563, -0.515126028098166, 0.05950528383255005]
+#renderView1.CameraParallelScale = 1.3933412315186304
 
 #### uncomment the following to render all views
 # RenderAllViews()
