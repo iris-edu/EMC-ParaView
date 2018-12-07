@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="boundary_drop_down_menu"
     default_values="2">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_data">
           BOUNDARY_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -23,7 +23,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="area_drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_area">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -41,7 +41,7 @@ Properties = dict(
     Latitude_End='',
     Longitude_Begin='',
     Longitude_End='',
-    Boundary_Elevation=10,
+    Depth_Bias='0.0',
     DataFile=2
 )
 
@@ -52,19 +52,19 @@ def RequestData():
     import numpy as np
     import csv
     import os
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as lib
     import urlparse
 
     if len(Alternate_FileName.strip()) > 0:
-         FileName = Alternate_FileName
-         Label = ' '.join(['Boundary',lib.file_name(Alternate_FileName).strip()])
+         FileName = Alternate_FileName.strip()
+         Label = ' '.join(['Boundary', lib.file_name(Alternate_FileName).strip()])
     else:
          FileName = lib.boundaryKeys[DataFile]
          Label = lib.boundaryValues[DataFile]
 
     # make sure we have input files
-    fileFound, address, source = lib.find_file(FileName, loc='EMC_BOUNDARIES_PATH')
+    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_BOUNDARIES_PATH')
     if not fileFound:
         raise Exception('boundary file "' + address +
                         '" not found! Please provide the full path or UR for the file. Aborting.')
@@ -83,10 +83,7 @@ def RequestData():
     segments = []
     pointIndex  = -1
     thisSegment = []
-    order = 1
-
-    # depth is positive down
-    Boundary_Elevation *= -1
+    Boundary_Elevation = float(Depth_Bias)
 
     column_keys = lib.columnKeys
     for key in lib.columnKeys.keys():

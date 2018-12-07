@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="coordinate_drop_down_menu"
     default_values="0">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_type">
           <Entry value="0" text="Latitude, Longitude, Depth"/>
           <Entry value="1" text="X, Y, Z"/>
     </EnumerationDomain>
@@ -36,7 +36,7 @@ def RequestData():
     import numpy as np
     import os
     import paraview.simple as simple
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as lib
 
     views = simple.GetViews(viewtype="SpreadSheetView")

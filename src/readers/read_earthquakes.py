@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="drop_down_menu"
     default_values="0">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_source">
           EARTHQUAKE_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -23,7 +23,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="area_drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_area">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -47,15 +47,14 @@ Properties = dict(
     Depth_End=200,
     Magnitude_Begin=6,
     Magnitude_End=10,
-    Start_Time='2000-01-01',
-    Max_Count=200
+    Start_Time='2000-01-01'
 )
 
 
 def RequestData():
     # R.1.2018.290
     import sys
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
     import numpy as np
     import csv
@@ -73,13 +72,14 @@ def RequestData():
 
     # make sure we have input files
     query = Lib.earthquakeQuery % (Start_Time, Magnitude_Begin, Magnitude_End, Depth_Begin, Depth_End, Latitude_Begin,
-                                   Latitude_End, Longitude_Begin, Longitude_End, Max_Count)
+                                   Latitude_End, Longitude_Begin, Longitude_End)
+    Alternate_FileName = Alternate_FileName.strip()
     if len(Alternate_FileName) <= 0:
         eqFile = Lib.query2filename(query, url=Lib.earthquakeKeys[Data_Source])
         query = '?'.join([Lib.earthquakeKeys[Data_Source], query])
-        fileFound, address, source = Lib.find_file(eqFile, loc='EMC_EARTHQUAKES_PATH', query=query)
+        fileFound, address, source = Lib.find_file(eqFile, loc=r'EMC_EARTHQUAKES_PATH', query=query)
     else:
-        fileFound, address, source = Lib.find_file(Alternate_FileName, loc='EMC_EARTHQUAKES_PATH')
+        fileFound, address, source = Lib.find_file(Alternate_FileName, loc=r'EMC_EARTHQUAKES_PATH')
     if not fileFound:
         raise Exception('earthquake catalog file "' + address +
                         '" not found! Please provide the full path or UR for the file. Aborting.')
@@ -98,7 +98,7 @@ def RequestData():
     else:
         try:
             this_label = urlparse.urlparse(Alternate_FileName).netloc
-        except Exception:
+        except:
             this_label = Alternate_FileName
 
     header = params['header']
@@ -192,19 +192,21 @@ def RequestData():
 
 def RequestInformation():
     from paraview import util
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as Lib
 
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = Lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                 Longitude_Begin, Longitude_End)
     query = Lib.earthquakeQuery % (Start_Time, Magnitude_Begin, Magnitude_End, Depth_Begin, Depth_End, Latitude_Begin,
-                                   Latitude_End, Longitude_Begin, Longitude_End, Max_Count)
+                                   Latitude_End, Longitude_Begin, Longitude_End)
+
+    Alternate_FileName = Alternate_FileName.strip()
     if len(Alternate_FileName) <= 0:
         eq_file = Lib.query2filename(query, url=Lib.earthquakeKeys[Data_Source])
         query = '?'.join([Lib.earthquakeKeys[Data_Source], query])
-        file_found, address, source = Lib.find_file(eq_file, loc='EMC_EARTHQUAKES_PATH', query=query)
+        file_found, address, source = Lib.find_file(eq_file, loc=r'EMC_EARTHQUAKES_PATH', query=query)
     else:
-        file_found, address, source = Lib.find_file(Alternate_FileName, loc='EMC_EARTHQUAKES_PATH')
+        file_found, address, source = Lib.find_file(Alternate_FileName, loc=r'EMC_EARTHQUAKES_PATH')
     if not file_found:
         raise Exception('earthquake catalog file "' + address +
                         '" not found! Please provide the full path or UR for the file. Aborting.')

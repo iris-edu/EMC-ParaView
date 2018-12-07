@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="slab_drop_down_menu"
     default_values="0">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_slab">
           USGS_SLAB_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -23,7 +23,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="area_drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_area">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -49,22 +49,33 @@ Properties = dict(
 def RequestData():
     # R.0.2018.080
     import sys
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
     import numpy as np
     import csv
     import os
+    from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
     import urlparse
+    import IrisEMC_Paraview_Utils as utils
+    import IrisEMC_Paraview_Param as param
 
     USGS = True
     if len(Alternate_FileName.strip()) > 0:
-         FileName = Alternate_FileName
+         FileName = Alternate_FileName.strip()
          Label = ' '.join(['SLAB', lib.file_name(Alternate_FileName).strip()])
          USGS = False
     else:
          FileName = lib.usgsSlabKeys[Slab]
+
+    FileName = FileName.strip()
+    ext = None
+    if FileName in param.usgsSlabDict.keys():
+        if utils.support_nc():
+            ext = param.usgsSlabExtDict['ssl']
+        else:
+            ext = param.usgsSlabExtDict['geo']
 
     depthFactor = -1
 
@@ -74,14 +85,26 @@ def RequestData():
                                                          Longitude_Begin, Longitude_End)
 
     # Make sure we have input files
-    fileFound, address, source = lib.find_file(FileName, loc='EMC_SLABS_PATH')
+    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_SLABS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "'+address+'" not found! Aborting.')
 
+    this_filename, extension = splitext(address)
     sg = self.GetOutput() # vtkPolyData
 
-    X, Y, Z, V, label = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                           Sampling, False)
+    if extension.lower() == '.grd':
+        X, Y, Z, V, label = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin),
+                                               (Latitude_End, Longitude_End),
+                                               Sampling, False)
+    elif extension.lower() == '.csv':
+        X, Y, Z, V, meta = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin),
+                                                    (Latitude_End, Longitude_End),
+                                                    Sampling, 0, extent=False)
+        label = ''
+
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+
     
     nx = len(X)
     ny = len(X[0])
@@ -158,27 +181,49 @@ def RequestData():
     RenameSource(' '.join([Label.strip(), Label2.strip()]))
 
 def RequestInformation():
-    sys.path.insert(0, "EMC_SRC_PATH")
+    from os.path import splitext
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as lib
     from paraview import util
+    import IrisEMC_Paraview_Utils as utils
+    import IrisEMC_Paraview_Param as param
 
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                Longitude_Begin, Longitude_End)
 
     if len(Alternate_FileName.strip()) > 0:
-         FileName = Alternate_FileName
+         FileName = Alternate_FileName.strip()
          Label = ' '.join(['SLAB', lib.file_name(Alternate_FileName).strip()])
     else:
          FileName = lib.usgsSlabKeys[Slab]
          Label = ' '.join(['USGS Slab 1.0 -', lib.usgsSlabValues[Slab].strip()])
-    
-    fileFound, address, source = lib.find_file(FileName, loc='EMC_SLABS_PATH')
+
+    FileName = FileName.strip()
+    ext = None
+    if FileName in param.usgsSlabDict.keys():
+        if utils.support_nc():
+            ext = param.usgsSlabExtDict['ssl']
+        else:
+            ext = param.usgsSlabExtDict['geo']
+
+    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_SLABS_PATH', ext=ext)
 
     if not fileFound:
         raise Exception('model file "'+address+'" not found! Aborting.')
 
-    nx, ny, nz = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                    Sampling, True)
+    this_filename, extension = splitext(address)
+
+    if extension.lower() == '.grd':
+        nx, ny, nz = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin),
+                                               (Latitude_End, Longitude_End),
+                                               Sampling, True)
+    elif extension.lower() == '.csv':
+        nx, ny, nz = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin),
+                                                    (Latitude_End, Longitude_End),
+                                                    Sampling, 0, extent=True)
+
+    else:
+        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0, nx, 0, ny, 0, nz])

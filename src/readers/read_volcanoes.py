@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_source">
           VOLCANO_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -23,7 +23,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="area_drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_area">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -48,7 +48,7 @@ Properties = dict(
 def RequestData():
     # R.0.2018.080
     import sys
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
     import numpy as np
     import csv
@@ -66,11 +66,11 @@ def RequestData():
     if len(Alternate_FileName) <= 0:
         volcanoFile = lib.query2filename(query)
         query = '?'.join([lib.volcanoLocationsKeys[Data_Source], query])
-        fileFound, address, source = lib.find_file(volcanoFile, loc='EMC_VOLCANOES_PATH', query=query)
+        fileFound, address, source = lib.find_file(volcanoFile, loc=r'EMC_VOLCANOES_PATH', query=query)
         Label = ' '.join([lib.volcanoLocationsValues[Data_Source].strip(), 'from',
                           urlparse.urlparse(lib.volcanoLocationsKeys[Data_Source]).netloc.strip()])
     else:
-       fileFound, address, source = lib.find_file(Alternate_FileName, loc='EMC_VOLCANOES_PATH')
+       fileFound, address, source = lib.find_file(Alternate_FileName.strip(), loc=r'EMC_VOLCANOES_PATH')
 
     if not fileFound:
         raise Exception('volcano file "' + address +
@@ -168,9 +168,9 @@ def RequestInformation():
     if len(Alternate_FileName) <= 0:
         volcanoFile = lib.query2filename(query)
         query = '?'.join([lib.volcanoLocationsKeys[Data_Source], query])
-        fileFound, address, source = lib.find_file(volcanoFile, loc='EMC_VOLCANOES_PATH', query=query)
+        fileFound, address, source = lib.find_file(volcanoFile, loc=r'EMC_VOLCANOES_PATH', query=query)
     else:
-        fileFound, address, source = lib.find_file(Alternate_FileName, loc='EMC_VOLCANOES_PATH')
+        fileFound, address, source = lib.find_file(Alternate_FileName.strip(), loc=r'EMC_VOLCANOES_PATH')
 
     if not fileFound:
         raise Exception('volcano file "' + address +

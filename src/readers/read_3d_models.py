@@ -1,7 +1,7 @@
 Name = 'Read3DModel'
-Label = 'Read 3-D Model'
+Label = 'Read 3D Model'
 FilterCategory = 'IRIS EMC'
-Help = 'Read and display 3-D Earth models.'
+Help = 'Read and display 3D Earth models.'
 
 ExtraXml = '''\
 <IntVectorProperty
@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="area_drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_area">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -43,7 +43,7 @@ Properties = dict(
 def RequestData():
     # R.0.2018.256
     import sys
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
     import numpy as np
     import csv
@@ -51,6 +51,16 @@ def RequestData():
     from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
+    import IrisEMC_Paraview_Utils as utils
+    import IrisEMC_Paraview_Param as param
+
+    File_name = File_name.strip()
+    ext = None
+    if File_name in param.filesDict.values():
+        if utils.support_nc():
+            ext = param.filesExtDict['ssl']
+        else:
+            ext = param.filesExtDict['geo']
 
     if Depth_begin > Depth_end:
         raise Exception('Begin Depth < End Depth! Aborting.')
@@ -62,7 +72,7 @@ def RequestData():
         raise Exception('Latitude, Longitude and Depth variable are required')
 
     # make sure we have input files
-    fileFound, address, source = lib.find_file(File_name, loc='EMC_MODELS_PATH')
+    fileFound, address, source = lib.find_file(File_name, loc=r'EMC_MODELS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "' + address + '" not found! Aborting.')
 
@@ -157,12 +167,22 @@ def RequestData():
 
 
 def RequestInformation():
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as lib
     from paraview import util
     from os.path import splitext
+    import IrisEMC_Paraview_Utils as utils
+    import IrisEMC_Paraview_Param as param
 
-    fileFound, address, source = lib.find_file(File_name, loc='EMC_MODELS_PATH')
+    File_name = File_name.strip()
+    ext = None
+    if File_name in param.filesDict.values():
+        if utils.support_nc():
+            ext = param.filesExtDict['ssl']
+        else:
+            ext = param.filesExtDict['geo']
+
+    fileFound, address, source = lib.find_file(File_name, loc=r'EMC_MODELS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "' + address + '" not found! Aborting.')
     Latitude_begin, Latitude_end, Longitude_begin, Longitude_end = lib.get_area(Area, Latitude_begin, Latitude_end,

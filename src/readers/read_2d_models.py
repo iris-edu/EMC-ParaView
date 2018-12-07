@@ -10,7 +10,7 @@ ExtraXml = '''\
     number_of_elements="1"
     initial_string="area_drop_down_menu"
     default_values="1">
-    <EnumerationDomain name="enum">
+    <EnumerationDomain name="enum_area">
           AREA_DROP_DOWN
     </EnumerationDomain>
     <Documentation>
@@ -25,7 +25,8 @@ OutputDataType = 'vtkStructuredGrid'
 Properties = dict(
     FileName="EMC_DEFAULT_2DMODEL",
     Area=1,
-    Roughness=0,
+    Roughness='1',
+    Depth_Bias='0.0',
     Label='',
     Latitude_Begin='',
     Latitude_End='',
@@ -40,7 +41,7 @@ Properties = dict(
 def RequestData():
     # R.0.2018.129
     import sys
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
     import numpy as np
     import csv
@@ -48,6 +49,19 @@ def RequestData():
     from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
+    import IrisEMC_Paraview_Utils as utils
+    import IrisEMC_Paraview_Param as param
+
+    FileName = FileName.strip()
+    ext = None
+    if FileName in param.filesDict.values():
+        if utils.support_nc():
+            ext = param.filesExtDict['ssl']
+        else:
+            ext = param.filesExtDict['geo']
+
+    baseline = float(Depth_Bias)
+    roughness_factor = float(Roughness)
 
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                 Longitude_Begin, Longitude_End)
@@ -55,7 +69,7 @@ def RequestData():
         raise Exception('Latitude, Longitude and Variable are required')
 
     # make sure we have input files
-    fileFound, address, source = lib.find_file(FileName, loc='EMC_MODELS_PATH')
+    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_MODELS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "' + address + '" not found! Aborting.')
 
@@ -72,11 +86,11 @@ def RequestData():
     if extension.lower() == '.nc':
         X, Y, Z, V, meta = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
                                                    (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                                   Sampling, Roughness, extent=False)
+                                                   Sampling, roughness_factor, base=baseline, extent=False)
     elif extension.lower() == '.csv':
          X, Y, Z, V, meta = lib.read_geocsv_model_2d(address,
                                                      (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                                     Sampling, Roughness, extent=False)
+                                                     Sampling, roughness_factor, base=baseline, extent=False)
     else:
         raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
@@ -104,7 +118,7 @@ def RequestData():
         for k in range(nz):
             for j in range(ny):
                 for i in range(nx):
-                    if V[var][i, j, k] == 9999.0 or V[var][i, j, k] is float('nan'):
+                    if V[var][i, j, k] is float('nan'):
                         scalars.InsertNextValue(float('nan'))
                     else:
                         scalars.InsertNextValue(V[var][i, j, k])
@@ -141,12 +155,22 @@ def RequestData():
     sg.SetFieldData(fieldData)
 
 def RequestInformation():
-    sys.path.insert(0, "EMC_SRC_PATH")
+    sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as lib
     from os.path import splitext
     from paraview import util
+    import IrisEMC_Paraview_Utils as utils
+    import IrisEMC_Paraview_Param as param
 
-    fileFound, address, source = lib.find_file(FileName, loc='EMC_MODELS_PATH')
+    FileName = FileName.strip()
+    ext = None
+    if FileName in param.filesDict.values():
+        if utils.support_nc():
+            ext = param.filesExtDict['ssl']
+        else:
+            ext = param.filesExtDict['geo']
+
+    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_MODELS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "'+address+'" not found! Aborting.')
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area,
@@ -156,11 +180,11 @@ def RequestInformation():
     if extension.lower() == '.nc':
         nx, ny, nz = lib.read_2d_netcdf_file(address, Latitude_Variable, Longitude_Variable, Variable,
                                              (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                             Sampling, Roughness, extent=True)
+                                             Sampling, 1.0, extent=True)
     elif extension.lower() == '.csv':
         nx, ny, nz = lib.read_geocsv_model_2d(address,
                                               (Latitude_Begin, Longitude_Begin), (Latitude_End, Longitude_End),
-                                              Sampling, Roughness, extent=True)
+                                              Sampling, 1.0, extent=True)
     else:
         raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
