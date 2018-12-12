@@ -23,7 +23,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
-    2018-12-q2 Manoch: R.1.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
+    2018-12-12 Manoch: R.1.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
                        would mask the slab depth
     2018-12-06 Manoch: R.1.2018.340 R1 release supports OS X, Linux, and Windows
     2018-11-12 Manoch: now find_file checks the OS to make sure .nc files are not requested on Windows platform
