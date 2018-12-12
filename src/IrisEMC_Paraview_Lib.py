@@ -23,6 +23,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2018-12-q2 Manoch: R.1.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
+                       would mask the slab depth
     2018-12-06 Manoch: R.1.2018.340 R1 release supports OS X, Linux, and Windows
     2018-11-12 Manoch: now find_file checks the OS to make sure .nc files are not requested on Windows platform
     2018-10-17 Manoch: R.1.2018.290 updates for R1
@@ -1209,7 +1211,7 @@ def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, lon_var='longitude
     return X, Y, Z, V, label
 
 
-def read_slab_file(model_file, ll, ur, inc, extent):
+def read_slab_file(model_file, ll, ur, inc=1, depth_factor=-1, extent=False):
     """read in a 2-D netCDF Slab file
 
     Keyword arguments:
@@ -1236,7 +1238,6 @@ def read_slab_file(model_file, ll, ur, inc, extent):
     z_variable = 'z'
     lon_variable = 'x'
     lat_variable = 'y'
-    depthFactor = -1
     depth = 0
 
     # model data
@@ -1262,7 +1263,7 @@ def read_slab_file(model_file, ll, ur, inc, extent):
     if extent:
         return nx - 1, ny - 1, nz - 1
 
-    label = "%0.1f-%0.1fkm"%(min(depth2),max(depth2))
+    label = "%0.1f-%0.1fkm" % (min(depth2), max(depth2))
 
     for l, var_value in enumerate(variables):
         X = np.zeros((nx, ny, nz))
@@ -1277,7 +1278,7 @@ def read_slab_file(model_file, ll, ur, inc, extent):
                         ii = longitude.index(lon_val)
                         jj = depth2.index(depth_val)
                         kk = latitude.index(lat_val)
-                        x, y, z = llz2xyz(lat[k], lon[i], elevation_data[k][i] * depthFactor / 1000.0)
+                        x, y, z = llz2xyz(lat[k], lon[i], elevation_data[k][i] * depth_factor)
                         X[ii, jj, kk] = x
                         Y[ii, jj, kk] = y
                         Z[ii, jj, kk] = z
