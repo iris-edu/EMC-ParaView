@@ -31,7 +31,7 @@ ExtraXml = '''\
     </Documentation>
 </IntVectorProperty>
 '''
-
+ 
 NumberOfInputs = 0
 OutputDataType = 'vtkPolyData'
 
