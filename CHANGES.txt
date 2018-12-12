@@ -13,9 +13,9 @@ COMMENTS/QUESTIONS:
 =========================================================
 2018-12-12
 =========================================================
-R.1.2018.346 readers/read_usgs_slabs.py and src/IrisEMC_Paraview_Lib.py - resolved an issue were for GeoCSV files a
-             factor of zero was included that would mask the slab depth
-R.1.2018.346 readers/read_earthquakes.py - made depth a scalar so it could be used for color scale
+R.1.5.1 readers/read_usgs_slabs.py and src/IrisEMC_Paraview_Lib.py - resolved an issue were for GeoCSV files a
+        factor of zero was included that would mask the slab depth
+R.1.5.1 readers/read_earthquakes.py - made depth a scalar so it could be used for color scale
 
 =========================================================
 2018-12-06
