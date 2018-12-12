@@ -2,7 +2,7 @@ Name = 'ReadUSGSSlabModel'
 Label = 'Show USGS Slab 1.0'
 FilterCategory = 'IRIS EMC'
 Help = 'Get/Read and display USGS Slab 1.0 models.'
-
+ 
 ExtraXml = '''\
 <IntVectorProperty
     name="Slab"
