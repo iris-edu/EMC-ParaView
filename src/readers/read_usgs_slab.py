@@ -47,7 +47,7 @@ Properties = dict(
 )
 
 def RequestData():
-    # R.0.2018.080
+    # R.1.2018.346
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
@@ -81,8 +81,9 @@ def RequestData():
 
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area, Latitude_Begin, Latitude_End,
                                                                                Longitude_Begin, Longitude_End)
-    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)"%(lib.areaValues[Area], Latitude_Begin, Latitude_End,
-                                                         Longitude_Begin, Longitude_End)
+    Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)" % (lib.areaValues[Area], Latitude_Begin,
+                                                           Latitude_End, Longitude_Begin, Longitude_End,
+                                                           )
 
     # Make sure we have input files
     fileFound, address, source = lib.find_file(FileName, loc=r'EMC_SLABS_PATH', ext=ext)
@@ -95,11 +96,11 @@ def RequestData():
     if extension.lower() == '.grd':
         X, Y, Z, V, label = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin),
                                                (Latitude_End, Longitude_End),
-                                               Sampling, False)
+                                               inc=Sampling, depth_factor=depthFactor, extent=False)
     elif extension.lower() == '.csv':
         X, Y, Z, V, meta = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin),
                                                     (Latitude_End, Longitude_End),
-                                                    Sampling, 0, extent=False)
+                                                    Sampling, 1, base=0, unit_factor=depthFactor, extent=False)
         label = ''
 
     else:
@@ -215,8 +216,9 @@ def RequestInformation():
 
     if extension.lower() == '.grd':
         nx, ny, nz = lib.read_slab_file(address, (Latitude_Begin, Longitude_Begin),
-                                               (Latitude_End, Longitude_End),
-                                               Sampling, True)
+                                        (Latitude_End, Longitude_End),
+                                        inc=Sampling, extent=True
+                                        )
     elif extension.lower() == '.csv':
         nx, ny, nz = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin),
                                                     (Latitude_End, Longitude_End),
