@@ -47,12 +47,13 @@ Properties = dict(
     Depth_End=200,
     Magnitude_Begin=6,
     Magnitude_End=10,
+    Vertical_Scaling=1,
     Start_Time='2000-01-01'
 )
 
 
 def RequestData():
-    # R.1.2018.290
+    # R.1.2018.346
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
@@ -116,9 +117,12 @@ def RequestData():
         elif value.strip().lower() == column_keys['magnitude_column'].lower():
             mag_index = index
 
-    scalars = vtk.vtkFloatArray()
-    scalars.SetNumberOfComponents(1)
-    scalars.SetName("magnitude")
+    scalar_m = vtk.vtkFloatArray()
+    scalar_m.SetNumberOfComponents(1)
+    scalar_m.SetName("magnitude")
+    scalar_d = vtk.vtkFloatArray()
+    scalar_d.SetNumberOfComponents(1)
+    scalar_d.SetName("depth")
     lat = []
     lon = []
     depth = []
@@ -134,9 +138,11 @@ def RequestData():
         if Latitude_Begin <= lat[-1] <= Latitude_End and Longitude_Begin <= lon[-1] <= Longitude_End:
             x, y, z = Lib.llz2xyz(lat[-1], lon[-1], depth[-1])
             pts.InsertNextPoint(x, y, z)
-            scalars.InsertNextValue(mag[-1])
+            scalar_m.InsertNextValue(mag[-1])
+            scalar_d.InsertNextValue(depth[-1])
     pdo.SetPoints(pts)
-    pdo.GetPointData().AddArray(scalars)
+    pdo.GetPointData().AddArray(scalar_m)
+    pdo.GetPointData().AddArray(scalar_d)
 
     if len(this_label.strip()) > 0:
         simple.RenameSource(' '.join(['Earthquake locations:', 'from', this_label.strip(), label2.strip()]))
