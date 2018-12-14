@@ -9,24 +9,34 @@ COMMENTS/QUESTIONS:
     Please contact manoch@iris.washington.edu
 
 ---------------------------------------------------------
-
 =========================================================
-2018-12-12
+2018-12-13 R.1.5.1
 =========================================================
-R.1.5.1 readers/read_usgs_slabs.py and src/IrisEMC_Paraview_Lib.py - resolved an issue were for GeoCSV files a
+- IrisEMC_Paraview_Lib.py CSV file is now uses open rU to open for input as a text file with universal newline
+                              interpretation.
+                          Using splitlines() to regardless of line ending
+                          Fixed the issue with GeoCSV slab legend that displayed negative depths.
+- readers/read_2d_models.py modified the logic to accept any file extension for GeoCSV files
+- readers/read_3d_models.py modified the logic to accept any file extension for GeoCSV files
+- readers/read_etopo.py modified the logic to accept any file extension for GeoCSV files
+- readers/read_usgs_slab.py style update
+=========================================================
+2018-12-12 R.1.5.1
+=========================================================
+readers/read_usgs_slabs.py and src/IrisEMC_Paraview_Lib.py - resolved an issue were for GeoCSV files a
         factor of zero was included that would mask the slab depth
-R.1.5.1 readers/read_earthquakes.py - made depth a scalar so it could be used for color scale
+readers/read_earthquakes.py - made depth a scalar so it could be used for color scale
 
 =========================================================
-2018-12-06
+2018-12-06 R.1.5.0
 =========================================================
 
-Version 1.5 Public release supporting OS X, Linux and Windows platforms. Works with both
-                            GeoCSV (on all platforms) and netCDF on (OS X and Linux)
+Public release supporting OS X, Linux and Windows platforms. Works with both
+        GeoCSV (on all platforms) and netCDF on (OS X and Linux)
 
 
 =========================================================
-2018-06-11
+2018-06-11 R.1.0.0
 =========================================================
 
 Version 1.0 Public release
