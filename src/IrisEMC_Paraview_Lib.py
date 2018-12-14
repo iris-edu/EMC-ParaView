@@ -23,6 +23,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2018-12-13 Manoch: R.1.2018.347 CSV file is now uses open rU to open for input as a text file with universal
+                       newline interpretation. We are now using splitlines() to regardless of line ending
+                       Fixed the issue with GeoCSV slab legend that displayed negative depths.
     2018-12-12 Manoch: R.1.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
                        would mask the slab depth
     2018-12-06 Manoch: R.1.2018.340 R1 release supports OS X, Linux, and Windows
@@ -279,9 +282,11 @@ def read_geocsv(gfile_name, is_2d=False):
     params: a dictionary of the key-value pairs found in the header
     data: a text block of the body
     """
-    fp = open(gfile_name, 'r')
+    # open the CSV file
+    # rU: open for input as a text file with universal newline interpretation
+    fp = open(gfile_name, 'ru')
     content = fp.read()
-    lines = content.split('\n')
+    lines = content.splitlines()
     fp.close()
     params = {}
     data = []
@@ -347,7 +352,7 @@ def read_info_file(data_file):
     origin = file_name(data_file)
     if os.path.isfile(info_file):
             fp = open(info_file, 'r')
-            lines = fp.read().split('\n')
+            lines = fp.read().splitlines()
             fp.close()
             origin = data_file
             for line in lines:
@@ -513,7 +518,7 @@ def find_file(address, loc, query='', ext=None):
                 if found:
                     fp = open(destination, 'r+')
                     catalog = fp.read()
-                    lines = catalog.split('\n')
+                    lines = catalog.splitlines()
                     fp.seek(0, 0)
                     fp.write("%s\n%s" % (lines[0], wovo_header(source)))
                     for line in lines[1:]:
@@ -1000,7 +1005,8 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
 
                 if var_val not in V.keys():
                     V[var_val] = np.zeros((nx, ny, nz))
-                V[var_val][ii, jj, kk] = float(this_value) * float(unit_factor)
+                # V[var_val][ii, jj, kk] = float(this_value) * float(unit_factor)
+                V[var_val][ii, jj, kk] = float(this_value)
 
     return X, Y, Z, V, meta
 
@@ -1263,7 +1269,9 @@ def read_slab_file(model_file, ll, ur, inc=1, depth_factor=-1, extent=False):
     if extent:
         return nx - 1, ny - 1, nz - 1
 
-    label = "%0.1f-%0.1fkm" % (min(depth2), max(depth2))
+    label = ''
+    if len(depth2):
+        label = "%0.1f-%0.1fkm" % (min(depth2), max(depth2))
 
     for l, var_value in enumerate(variables):
         X = np.zeros((nx, ny, nz))
