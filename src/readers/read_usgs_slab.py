@@ -221,8 +221,8 @@ def RequestInformation():
                                         )
     elif extension.lower() == '.csv':
         nx, ny, nz = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin),
-                                                    (Latitude_End, Longitude_End),
-                                                    Sampling, 0, extent=True)
+                                              (Latitude_End, Longitude_End),
+                                              Sampling, 0, extent=True)
 
     else:
         raise Exception('cannot recognize model file "' + address + '"! Aborting.')
