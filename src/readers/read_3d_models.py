@@ -86,16 +86,18 @@ def RequestData():
     sg = self.GetOutput()  # vtkPolyData
 
     this_filename, extension = splitext(address)
-    if extension.lower() == '.nc':
+    if extension.lower() in ['.nc', '.grd']:
         X, Y, Z, V, meta = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
                                                  (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
                                                  Depth_begin, Depth_end, Vertical_Scaling, Sampling)
-    elif extension.lower() == '.csv':
-        X, Y, Z, V, meta = lib.read_geocsv_model_3d(address,
-                                                    (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                    Depth_begin, Depth_end, Vertical_Scaling, Sampling)
     else:
-        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+        try:
+            X, Y, Z, V, meta = lib.read_geocsv_model_3d(address,
+                                                        (Latitude_begin, Longitude_begin), (Latitude_end,
+                                                                                            Longitude_end),
+                                                        Depth_begin, Depth_end, Vertical_Scaling, Sampling)
+        except Exception:
+            raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
     nx = len(X)
     if nx <= 0:
@@ -192,12 +194,15 @@ def RequestInformation():
         nx, ny, nz = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
                                                  (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
                                                  Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling, extent=True)
-    elif extension.lower() == '.csv':
-        nx, ny, nz = lib.read_geocsv_model_3d(address,
-                                                    (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                    Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling, extent=True)
     else:
-        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+        try:
+            nx, ny, nz = lib.read_geocsv_model_3d(address,
+                                                  (Latitude_begin, Longitude_begin), (Latitude_end,
+                                                                                      Longitude_end),
+                                                  Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling,
+                                                  extent=True)
+        except Exception:
+            raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
 
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:

@@ -101,7 +101,7 @@ def RequestData():
     label2 = " - %s (%0.1f,%0.1f,%0.1f,%0.1f)" % (lib.areaValues[Area], Latitude_Begin, Latitude_End, Longitude_Begin,
                                                   Longitude_End)
 
-    if extension.lower() == '.nc':
+    if extension.lower() in ['.nc', '.grd']:
 
         X, Y, Z, V, label = lib.read_netcdf_topo_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
                                                                                                    Longitude_End),
@@ -110,14 +110,16 @@ def RequestData():
                                                       unit_factor=float(Unit_Factor),
                                                       extent=False)
 
-    elif extension.lower() == '.csv':
-        X, Y, Z, V, meta = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
-                                                                                                 Longitude_End),
-                                                    Sampling, Roughness, base=baseline, unit_factor=float(Unit_Factor),
-                                                    extent=False)
-
     else:
-        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+        try:
+            X, Y, Z, V, meta = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
+                                                                                                     Longitude_End),
+                                                        Sampling, Roughness, base=baseline,
+                                                        unit_factor=float(Unit_Factor),
+                                                        extent=False)
+
+        except Exception:
+            raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
     nx = len(X)
     ny = len(X[0])
@@ -200,17 +202,19 @@ def RequestInformation():
                                                                                Longitude_Begin, Longitude_End)
 
     this_filename, extension = splitext(address)
-    if extension.lower() == '.nc':
+    if extension.lower() in ['.nc', '.grd']:
         nx, ny, nz = lib.read_netcdf_topo_file(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
                                                                                             Longitude_End),
                                                Sampling, Roughness, lon_var=Longitude_Variable,
                                                lat_var=Latitude_Variable, elev_var=Elevation_Variable,
                                                extent=True)
-    elif extension.lower() == '.csv':
-        nx, ny, nz = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
-                                                                                           Longitude_End),
-                                              Sampling, Roughness, extent=True)
     else:
-        raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+        try:
+            nx, ny, nz = lib.read_geocsv_model_2d(address, (Latitude_Begin, Longitude_Begin), (Latitude_End,
+                                                                                           Longitude_End),
+                                                  Sampling, Roughness, extent=True)
+        except Exception:
+            raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+
     # ABSOLUTELY NECESSARY FOR THE READER TO WORK:
     util.SetOutputWholeExtent(self, [0, nx, 0, ny, 0, nz])
