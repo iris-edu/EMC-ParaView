@@ -23,6 +23,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2018-12-17 Manoch: R.1.2018.354 CSV file is now uses open rU to open for input as a text file with universal (corrected typo)
     2018-12-13 Manoch: R.1.2018.347 CSV file is now uses open rU to open for input as a text file with universal
                        newline interpretation. We are now using splitlines() to regardless of line ending
                        Fixed the issue with GeoCSV slab legend that displayed negative depths.
@@ -284,7 +285,7 @@ def read_geocsv(gfile_name, is_2d=False):
     """
     # open the CSV file
     # rU: open for input as a text file with universal newline interpretation
-    fp = open(gfile_name, 'ru')
+    fp = open(gfile_name, 'rU')
     content = fp.read()
     lines = content.splitlines()
     fp.close()
