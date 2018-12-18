@@ -23,7 +23,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
-    2018-12-17 Manoch: R.1.2018.354 CSV file is now uses open rU to open for input as a text file with universal (corrected typo)
+    2018-12-18 Manoch: R.1.2018.455 updated xyz2llz since it was returning longitude in radians and not degrees
+    2018-12-17 Manoch: R.1.2018.354 CSV file is now uses open rU to open for input as a text file with universal
+                       (corrected typo)
     2018-12-13 Manoch: R.1.2018.347 CSV file is now uses open rU to open for input as a text file with universal
                        newline interpretation. We are now using splitlines() to regardless of line ending
                        Fixed the issue with GeoCSV slab legend that displayed negative depths.
@@ -635,7 +637,8 @@ def xyz2llz(x, y, z):
     N = erad / np.sqrt(1.0 - e * e * np.sin(lat) * np.sin(lat))
     alt = p / np.cos(lat) - N
 
-    lon = lon % (math.pi * 2.0)
+    lon = np.mod(lon, (math.pi * 2.0))
+    lon = np.rad2deg(lon)
     lon = utils.lon_180(lon)
     lat = np.rad2deg(lat)
     alt = -1 * alt / 1000.0  # depth as negative alt
