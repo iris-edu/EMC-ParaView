@@ -10,6 +10,12 @@ COMMENTS/QUESTIONS:
 
 ---------------------------------------------------------
 =========================================================
+2018-12-18 R.1.5.2
+=========================================================
+- filters/filter_view_coordinates.py now outputs the grid coordiantes as lat, lon and depth
+- IrisEMC_Paraview_Lib.py  updated xyz2llz since it was returning longitude in radians and not degrees
+
+=========================================================
 2018-12-13 R.1.5.1
 =========================================================
 - IrisEMC_Paraview_Lib.py CSV file is now uses open rU to open for input as a text file with universal newline
