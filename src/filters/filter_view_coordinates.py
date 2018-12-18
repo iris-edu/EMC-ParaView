@@ -1,21 +1,21 @@
 Name = 'viewCoordinates'
-Label = 'View Coordinates'
+label = 'View Coordinates'
 FilterCategory = 'IRIS EMC'
-Help = 'Display boundary coordinate information of the input in terms of lat, lon, depth'
+Help = 'Display coordinate information of the input in terms of lat, lon, depth'
 
 NumberOfInputs = 1
 OutputDataType = 'vtkTable'
 
 Properties = dict(
-    Label = ''
+    label=''
 )
 
 PropertiesHelp = dict(
-    view_coordinates = "",
+    view_coordinates='',
 )
 
 def RequestData():
-    # R.0.2018.080
+    # R.1.2018.352
     import sys
     sys.path.insert(0, "EMC_SRC_PATH")
     from datetime import datetime
@@ -26,141 +26,92 @@ def RequestData():
     import paraview.simple as simple
 
     views = simple.GetViews(viewtype="SpreadSheetView")
+    print len(views)
     if len(views) > 0:
-       simple.Delete(views[0])
+        # set active view
+        view = simple.SetActiveView(views[0])
     else:
-       view = simple.GetActiveView()
-       layout = simple.GetLayout(view)
-       locationId = layout.SplitViewVertical(view=view ,fraction=0.7)
+        view = simple.GetActiveView()
+        layout = simple.GetLayout(view)
+        location_id = layout.SplitViewVertical(view=view, fraction=0.7)
 
-    myId    = simple.GetActiveSource().Input.GetGlobalIDAsString()
+    myId = simple.GetActiveSource().Input.GetGlobalIDAsString()
+
     proxies = simple.GetSources()
     proxyList = []
     for key in proxies:
-       listElt = {}
-       listElt['name'] = key[0]
-       listElt['id'] = key[1]
-       proxy = proxies[key]
-       parentId = '0'
-       if hasattr(proxy, 'Input'):
-           parentId = proxy.Input.GetGlobalIDAsString()
-       listElt['parent'] = parentId
-       proxyList.append(listElt)
-
-
-    pdi = self.GetInput() # VTK PolyData Type
+        list_elt = dict()
+        list_elt['name'] = key[0]
+        list_elt['id'] = key[1]
+        proxy = proxies[key]
+        parent_id = '0'
+        if hasattr(proxy, 'Input'):
+            parent_id = proxy.Input.GetGlobalIDAsString()
+        list_elt['parent'] = parent_id
+        proxyList.append(list_elt)
+ 
+    pdi = self.GetInput()  # VTK PolyData Type
     np = pdi.GetNumberOfPoints()
-    depthMin = 9999999999999.0
-    depthMax = -9999999999999.0
-    latitude  = {}
+    latitude = {}
     longitude = {}
+    depth = []
 
-    pdo = self.GetOutput() # VTK Table Type
-    polyData  = vtk.vtkPolyData()
-    dataPoints = vtk.vtkPoints()
+    pdo = self.GetOutput()  # VTK Table Type
+    poly_data = vtk.vtkPolyData()
+    data_points = vtk.vtkPoints()
 
-    if len(Label.strip()) <= 0:
-         pid = simple.GetActiveSource().Input.GetGlobalIDAsString()
-         proxies = simple.GetSources()
-         for key in proxies:
-             if key[1] == pid:
-                 Label = " ".join(["Coordinates View:",key[0]])
-                 break
+    if len(this_label.strip()) <= 0:
+        pid = simple.GetActiveSource().Input.GetGlobalIDAsString()
+        proxies = simple.GetSources()
+        for key in proxies:
+            if key[1] == pid:
+                this_label = " ".join(["Coordinates:", key[0]])
+                break
+
     for i in range(np):
         point = pdi.GetPoints().GetPoint(i)
-        (lat,lon,depth) = lib.xyz2llz(point[0],point[1],point[2])
-        dataPoints.InsertNextPoint((lat,lon,depth))
-        key = "%0.1f"%(depth)
-        if depthMin >= float(key):
-           depthMin = float(key)
-           depthMinKey = key
-        if depthMax <= float(key):
-           depthMax = float(key)
-           depthMaxKey = key
+        (lat, lon, this_depth) = lib.xyz2llz(point[0], point[1], point[2])
+        data_points.InsertNextPoint((lat, lon, this_depth))
+
+        key = "%0.4f" % this_depth
         if key not in latitude.keys():
-            latitude[key] =[]
+            latitude[key] = []
             longitude[key] = []
-        latitude[key].append(float("%0.1f"%(lat)))
-        longitude[key].append(float("%0.1f"%(lon)))
+            depth.append(float(this_depth))
+        latitude[key].append(float(lat))
+        longitude[key].append(float(lon))
 
     # store boundary metadata
+    field_data = poly_data.GetFieldData()
+    field_data.AllocateArrays(4)  # number of fields
 
-    fieldData = polyData.GetFieldData()
-    fieldData.AllocateArrays(3) # number of fields
+    depth_data = vtk.vtkFloatArray()
+    depth_data.SetName('Depth\n(km)')
 
-    depthData = vtk.vtkStringArray()
-    depthData.SetName('Depth\n(km)')
+    lat_data = vtk.vtkFloatArray()
+    lat_data.SetName('Latitude\n(degrees)')
 
-    data = vtk.vtkStringArray()
-    data.SetName('Corners (lat,lon)\n(degrees)')
+    lon_data = vtk.vtkFloatArray()
+    lon_data.SetName('Longitude\n(degrees)')
 
-    depthKeys = [depthMinKey,depthMaxKey]
-    if depthMinKey == depthMaxKey:
-        depthKeys = [depthMinKey]
-    for i in range(len(depthKeys)):
-       depthKey = depthKeys[i]
-       borderLat = []
-       borderLon = []
-       oldMin = 999999999.0
-       oldMax = -99999999.0
-       lonList = list(set(sorted(longitude[depthKey])))
-       for j in range(len(lonList)):
-          lon = lonList[j]
-          minVal = 999999999.0
-          maxVal = -99999999.0
-          for i in range(len(longitude[depthKey])):
-             if longitude[depthKey][i] == lon:
-                if latitude[depthKey][i] > maxVal:
-                  maxVal = latitude[depthKey][i]
-                if latitude[depthKey][i] < minVal:
-                  minVal = latitude[depthKey][i]
-          if oldMin != minVal or j==len(lonList)-1:
-             if abs(oldMin) < 9999.0:
-                borderLat.append(oldMin)
-                borderLon.append(lon)
-             borderLat.append(minVal)
-             borderLon.append(lon)
-             oldMin = minVal
-          if oldMax != maxVal or j==len(lonList)-1:
-             if abs(oldMax) < 9999.0:
-                borderLat.append(oldMax)
-                borderLon.append(lon)
-             borderLat.append(maxVal)
-             borderLon.append(lon)
-             oldMax = maxVal
-       borderList = zip(borderLat, borderLon)
-       borderList.sort()
-       borderList = list(set(borderList))
-       min1 = borderList[0][0]
-       max1 = borderList[0][0]
-       for i in range(len(borderList)):
-          if borderList[i][0] < min1:
-             min1 = borderList[i][0]
-          if borderList[i][0] > max1:
-             max1 = borderList[i][0]
-       minList = []
-       maxList = []
-       for i in range(len(borderList)):
-          if borderList[i][0] ==  min1:
-             minList.append(borderList[i][1])
-          if borderList[i][0] ==  max1:
-             maxList.append(borderList[i][1])
-       depthData.InsertNextValue(depthKey)
-       data.InsertNextValue("%0.1f, %0.1f"%(min1,min(minList)))
-       if min(minList) != max(minList):
-          depthData.InsertNextValue(" ")
-          data.InsertNextValue("%0.1f, %0.1f"%(min1,max(minList)))
-       depthData.InsertNextValue(" ")
-       data.InsertNextValue("%0.1f, %0.1f"%(max1,max(maxList)))
-       if min(maxList) != max(maxList):
-         depthData.InsertNextValue(" ")
-         data.InsertNextValue("%0.1f, %0.1f"%(max1,min(maxList)))
-    fieldData.AddArray(data)
-    fieldData.AddArray(depthData)
+    depth_keys = latitude.keys()
 
-    if len(Label.strip()) > 0:
-        simple.RenameSource(Label)
+    for i in range(len(depth_keys)):
+        depth_key = depth_keys[i]
+        lon_list = longitude[depth_key]
+        lat_list = latitude[depth_key]
+        point_list = zip(lat_list, lon_list)
+        point_list.sort()
+        for j in range(len(point_list)):
+            depth_data.InsertNextValue(depth[i])
+            lat_data.InsertNextValue(float(point_list[j][0]))
+            lon_data.InsertNextValue(float(point_list[j][1]))
 
-    pdo.SetFieldData(fieldData)
+    field_data.AddArray(lat_data)
+    field_data.AddArray(lon_data)
+    field_data.AddArray(depth_data)
 
+    if len(this_label.strip()) > 0:
+        simple.RenameSource(this_label)
 
+    pdo.SetFieldData(field_data)
