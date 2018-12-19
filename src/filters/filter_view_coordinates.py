@@ -1,5 +1,5 @@
 Name = 'viewCoordinates'
-label = 'View Coordinates'
+Label = 'View Coordinates'
 FilterCategory = 'IRIS EMC'
 Help = 'Display coordinate information of the input in terms of lat, lon, depth'
 
@@ -7,7 +7,7 @@ NumberOfInputs = 1
 OutputDataType = 'vtkTable'
 
 Properties = dict(
-    label=''
+    Label=''
 )
 
 PropertiesHelp = dict(
@@ -60,12 +60,12 @@ def RequestData():
     poly_data = vtk.vtkPolyData()
     data_points = vtk.vtkPoints()
 
-    if len(this_label.strip()) <= 0:
+    if len(Label.strip()) <= 0:
         pid = simple.GetActiveSource().Input.GetGlobalIDAsString()
         proxies = simple.GetSources()
         for key in proxies:
             if key[1] == pid:
-                this_label = " ".join(["Coordinates:", key[0]])
+                Label = " ".join(["Coordinates:", key[0]])
                 break
 
     for i in range(np):
@@ -111,7 +111,7 @@ def RequestData():
     field_data.AddArray(lon_data)
     field_data.AddArray(depth_data)
 
-    if len(this_label.strip()) > 0:
-        simple.RenameSource(this_label)
+    if len(Label.strip()) > 0:
+        simple.RenameSource(Label)
 
     pdo.SetFieldData(field_data)
