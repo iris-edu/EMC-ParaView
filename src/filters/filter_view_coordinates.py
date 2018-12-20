@@ -15,9 +15,10 @@ PropertiesHelp = dict(
 )
 
 def RequestData():
-    # R.1.2018.352
+    # R.1.2018.354
     import sys
     sys.path.insert(0, "EMC_SRC_PATH")
+    from operator import itemgetter
     from datetime import datetime
     import numpy as np
     from vtk.numpy_interface import dataset_adapter as dsa
@@ -26,7 +27,6 @@ def RequestData():
     import paraview.simple as simple
 
     views = simple.GetViews(viewtype="SpreadSheetView")
-    print len(views)
     if len(views) > 0:
         # set active view
         view = simple.SetActiveView(views[0])
@@ -49,13 +49,22 @@ def RequestData():
             parent_id = proxy.Input.GetGlobalIDAsString()
         list_elt['parent'] = parent_id
         proxyList.append(list_elt)
- 
+
     pdi = self.GetInput()  # VTK PolyData Type
-    np = pdi.GetNumberOfPoints()
+    try:
+        np = pdi.GetNumberOfPoints()
+    except Exception:
+        raise Exception('Invalid input!')
+
+    na = pdi.GetPointData().GetNumberOfArrays()
+    val_arrays = []
+    for i in range(na):
+        val_arrays.append(pdi.GetPointData().GetArray(i))
+
     latitude = {}
     longitude = {}
-    depth = []
-
+    value = {}
+    depth = {}
     pdo = self.GetOutput()  # VTK Table Type
     poly_data = vtk.vtkPolyData()
     data_points = vtk.vtkPoints()
@@ -67,32 +76,44 @@ def RequestData():
             if key[1] == pid:
                 Label = " ".join(["Coordinates:", key[0]])
                 break
-
     for i in range(np):
         point = pdi.GetPoints().GetPoint(i)
         (lat, lon, this_depth) = lib.xyz2llz(point[0], point[1], point[2])
         data_points.InsertNextPoint((lat, lon, this_depth))
-
-        key = "%0.4f" % this_depth
+        key = "%0.2f" % this_depth
         if key not in latitude.keys():
             latitude[key] = []
             longitude[key] = []
-            depth.append(float(this_depth))
-        latitude[key].append(float(lat))
-        longitude[key].append(float(lon))
+            value[key] = []
+
+        # need to control precision to have a reasonable sort order
+        # note that these coordinates are recomputed
+        if key not in depth.keys():
+            depth[key] = float('%0.4f' % this_depth)
+        latitude[key].append(float('%0.4f' % lat))
+        longitude[key].append(float('%0.4f' % lon))
+        value_array = []
+        for j in range(na):
+            value_array.append(float(val_arrays[j].GetTuple1(i)))
+        value[key].append(value_array)
 
     # store boundary metadata
     field_data = poly_data.GetFieldData()
-    field_data.AllocateArrays(4)  # number of fields
+    field_data.AllocateArrays(5)  # number of fields
 
     depth_data = vtk.vtkFloatArray()
-    depth_data.SetName('Depth\n(km)')
+    depth_data.SetName('depth')
 
     lat_data = vtk.vtkFloatArray()
-    lat_data.SetName('Latitude\n(degrees)')
+    lat_data.SetName('latitude')
 
     lon_data = vtk.vtkFloatArray()
-    lon_data.SetName('Longitude\n(degrees)')
+    lon_data.SetName('longitude')
+
+    val_data = []
+    for j in range(na):
+        val_data.append(vtk.vtkFloatArray())
+        val_data[j].SetName('value(%s)' % pdi.GetPointData().GetArray(j).GetName())
 
     depth_keys = latitude.keys()
 
@@ -100,18 +121,26 @@ def RequestData():
         depth_key = depth_keys[i]
         lon_list = longitude[depth_key]
         lat_list = latitude[depth_key]
-        point_list = zip(lat_list, lon_list)
-        point_list.sort()
-        for j in range(len(point_list)):
-            depth_data.InsertNextValue(depth[i])
-            lat_data.InsertNextValue(float(point_list[j][0]))
-            lon_data.InsertNextValue(float(point_list[j][1]))
+        val_list = value[depth_key]
+        point_list = zip(lat_list, lon_list, val_list)
+        point_list.sort(key=itemgetter(0, 1))
+
+        for index, data in enumerate(point_list):
+            depth_data.InsertNextValue(float(depth[depth_key]))
+            lat_data.InsertNextValue(float(data[0]))
+            lon_data.InsertNextValue(float(data[1]))
+            for k in range(na):
+                point_data = data[2]
+                val_data[k].InsertNextValue(point_data[k])
 
     field_data.AddArray(lat_data)
     field_data.AddArray(lon_data)
     field_data.AddArray(depth_data)
+    for j in range(na):
+        field_data.AddArray(val_data[j])
 
     if len(Label.strip()) > 0:
         simple.RenameSource(Label)
 
     pdo.SetFieldData(field_data)
+
