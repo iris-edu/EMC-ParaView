@@ -53,7 +53,7 @@ Properties = dict(
 
 
 def RequestData():
-    # R.1.2018.346
+    # R.1.2018.355
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
@@ -131,10 +131,22 @@ def RequestData():
     for i in range(1, len(lines)):
         line = lines[i].strip()
         values = line.strip().split(params['delimiter'].strip())
-        lat.append(float(values[lat_index]))
-        lon.append(float(values[lon_index]))
-        depth.append(float(values[depth_index]))
-        mag.append(float(values[mag_index]))
+        lat_value = float(values[lat_index])
+        lat.append(lat_value)
+        lon_value = float(values[lon_index])
+        lon.append(lon_value)
+        depth_value = float(values[depth_index])
+        depth.append(depth_value)
+        mag_value = float(values[mag_index])
+        mag.append(mag_value)
+
+        # check conditions again in case data came from a file
+        if not (float(Latitude_Begin) <= lat_value <= float(Latitude_End) and
+                float(Longitude_Begin) <= lon_value <= float(Longitude_End) and
+                float(Depth_Begin) <= depth_value <= float(Depth_End) and
+                float(Magnitude_Begin) <= mag_value <= float(Magnitude_End)):
+            continue
+
         if Latitude_Begin <= lat[-1] <= Latitude_End and Longitude_Begin <= lon[-1] <= Longitude_End:
             x, y, z = Lib.llz2xyz(lat[-1], lon[-1], depth[-1])
             pts.InsertNextPoint(x, y, z)
