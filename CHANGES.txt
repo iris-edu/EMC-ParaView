@@ -12,6 +12,11 @@ COMMENTS/QUESTIONS:
 
 
 =========================================================
+2018-12-21 R.1.5.2
+=========================================================
+- readers/read_earthquakes.py now applies earthquake parameters to the local files too
+
+=========================================================
 2018-12-20 R.1.5.2
 =========================================================
 - filters/filter_view_coordinates.py corrected the bug that would prevent it from outputting data values
