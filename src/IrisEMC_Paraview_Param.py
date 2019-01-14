@@ -93,13 +93,6 @@ else:
 # sort the earthquake dictionary based on the values (organization)
 (earthquakeKeys, earthquakeValues) = sortDictByValue(earthquakeCatalogDict)
 
-# volcano locations sources
-volcanoLocationsDict = {'http://geows.ds.iris.edu/geows-uf/wovodat/1/query': 'WOVOdat'}
-volcanoLocationsQuery = "getVolcanoLocations=true"
-
-# sort volcano location sources  dictionary based on the values (organization)
-(volcanoLocationsKeys, volcanoLocationsValues) = sortDictByValue(volcanoLocationsDict)
-
 # Paths
 topDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -122,7 +115,8 @@ for key in pathDict.keys():
 # NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
 #       '' is used to flag the need for update
 filesExtDict = {'ssl': '.nc', 'geo': '.csv'}
-filesDict = {'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent', 'EMC_DEFAULT_2DMODEL': 'CAM2016Litho'}
+filesDict = {'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent', 'EMC_DEFAULT_2DMODEL': 'CAM2016Litho',
+             'EMC_DEFAULT_VOLCANO': 'WOVOdat_volcano_locations.csv'}
 
 # default column names for GeoCSV files. User can redefine these in the GeoCSV header
 columnKeys = {'latitude_column': 'latitude', 'longitude_column': 'longitude', 'depth_column': 'depth',
