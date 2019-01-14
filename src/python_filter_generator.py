@@ -19,7 +19,8 @@
 #
 # History:
 #
-#   2018-03-21 Manoch: R.0.2018.080
+#   2019-01-14 Manoch: V.2019.014 support for volcano data from EMC file repository
+#   2018-03-21 Manoch: V.2018.080
 #   2018-02-28 Manoch: adopted to EMC ParaView support and added option of replacing keyword in the XML body before writing it to the file
 #   2018-01-20 Manoch: original code by Bane Sullivan from https://github.com/banesullivan/ParaViewGeophysics
 #
@@ -421,10 +422,6 @@ def generatePythonFilterFromFiles(scriptFile, outputFile):
     for i in range(len(param.earthquakeKeys)):
         earthquakeDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.earthquakeValues[i])
 
-    volcanoDropDownItems = ""
-    for i in range(len(param.volcanoLocationsKeys)):
-        volcanoDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.volcanoLocationsValues[i])
-
     boundaryDropDownItems = ""
     for i in range(len(param.boundaryKeys)):
         boundaryDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.boundaryValues[i])
@@ -450,9 +447,6 @@ def generatePythonFilterFromFiles(scriptFile, outputFile):
      
     if 'EARTHQUAKE_DROP_DOWN' in xmlOutput:
         xmlOutput = xmlOutput.replace('EARTHQUAKE_DROP_DOWN', earthquakeDropDownItems)
-
-    if 'VOLCANO_DROP_DOWN' in xmlOutput:
-        xmlOutput = xmlOutput.replace('VOLCANO_DROP_DOWN', volcanoDropDownItems)
 
     if 'BOUNDARY_DROP_DOWN' in xmlOutput:
         xmlOutput = xmlOutput.replace('BOUNDARY_DROP_DOWN', boundaryDropDownItems)
