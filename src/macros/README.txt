@@ -25,4 +25,4 @@ IRIS_EMC_Paraview/src/macros:
    Display USGS Slab 1.0 model for Central America from earthquake.usgs.gov 
 
 - macro_volcanoes.py
-   Display volcano locations using WOVOdat data from geows.ds.iris.edu 
+   Display volcano locations using WOVOdat data from ds.iris.edu 
