@@ -88,12 +88,6 @@ earthquakeQuery = param.earthquakeQuery
 earthquakeKeys = param.earthquakeKeys
 earthquakeValues = param.earthquakeValues
 
-# volcano
-volcanoLocationsQuery = param.volcanoLocationsQuery
-volcanoLocationsKeys = param.volcanoLocationsKeys
-volcanoLocationsValues = param.volcanoLocationsValues
-volcanoLocationsDict = param.volcanoLocationsDict
-
 
 def get_points_in_volume(lat, lon, dep, ll, ur, inc, depth_min, depth_max):
     """find points that fall with in a volume
@@ -251,11 +245,14 @@ def wovo_header(url):
     Return values:
     header: GeoCSV file header
     """
+    from datetime import datetime
+
     header = ("# title: Volcano Locations\n"
               "# source: %s\n"
+              "# created: %s UTC\n"
               "# latitude_column: lat\n"
               "# longitude_column: long\n"
-              "# elevation_column: elevation\n") % url
+              "# elevation_column: elevation\n") % (url, datetime.utcnow().replace(microsecond=0).isoformat())
     return header
 
 
@@ -436,7 +433,7 @@ def get_file_from_url(url, path, filename=''):
         if os.path.isfile(destination):
             info_file = os.path.splitext(destination)[0] + '.inf'
             fp = open(info_file, 'w')
-            fp.write('# date: %s\n' % str(datetime.now()))
+            fp.write('# date: %s UTC\n' % str(datetime.utcnow().replace(microsecond=0).isoformat()))
             fp.write('# file: %s\n' % destination)
             fp.write('# source: %s\n' % url)
             fp.close()
@@ -489,7 +486,7 @@ def find_file(address, loc, query='', ext=None):
     # Other possibilities, URL?
     else:
         # check the DMC URL
-        if loc in (pathDict['EMC_BOUNDARIES_PATH'], pathDict['EMC_MODELS_PATH']):
+        if loc in (pathDict['EMC_BOUNDARIES_PATH'], pathDict['EMC_MODELS_PATH'], pathDict['EMC_VOLCANOES_PATH']):
             source = irisEMC_Files_URL + address
             if is_url_valid(source):
                 found, destination, origin = get_file_from_url(source, loc, filename=os.path.join(loc, address))
@@ -511,21 +508,6 @@ def find_file(address, loc, query='', ext=None):
                     fp.seek(0, 0)
                     fp.write(eq_header(source))
                     fp.write(catalog)
-                    fp.close()
-
-        # Volcano locations
-        elif loc == pathDict['EMC_VOLCANOES_PATH']:
-            source = query
-            if is_url_valid(source):
-                found, destination, origin = get_file_from_url(source, loc, filename=os.path.join(loc, address))
-                if found:
-                    fp = open(destination, 'r+')
-                    catalog = fp.read()
-                    lines = catalog.splitlines()
-                    fp.seek(0, 0)
-                    fp.write("%s\n%s" % (lines[0], wovo_header(source)))
-                    for line in lines[1:]:
-                        fp.write("%s\n" % line)
                     fp.close()
 
         # did we find the file?
