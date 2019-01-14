@@ -4,19 +4,7 @@ FilterCategory = 'IRIS EMC'
 Help = 'Read and display volcano locations.'
 
 ExtraXml = '''\
-<IntVectorProperty
-    name="Data_Source"
-    command="SetParameter"
-    number_of_elements="1"
-    initial_string="drop_down_menu"
-    default_values="1">
-    <EnumerationDomain name="enum_source">
-          VOLCANO_DROP_DOWN
-    </EnumerationDomain>
-    <Documentation>
-        Choose volcano locations service
-    </Documentation>
-</IntVectorProperty>
+
 <IntVectorProperty
     name="Area"
     command="SetParameter"
@@ -36,9 +24,8 @@ NumberOfInputs = 0
 OutputDataType = 'vtkPolyData'
 
 Properties = dict(
-    Data_Source=0,
+    File_name="EMC_DEFAULT_VOLCANO",
     Area=1,
-    Alternate_FileName="",
     Latitude_Begin='',
     Latitude_End='',
     Longitude_Begin='',
@@ -46,7 +33,7 @@ Properties = dict(
 )
 
 def RequestData():
-    # R.0.2018.080
+    # V.2019.014
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
@@ -62,15 +49,11 @@ def RequestData():
     pts = vtk.vtkPoints()
 
     # make sure we have input files
-    query = lib.volcanoLocationsQuery
-    if len(Alternate_FileName) <= 0:
-        volcanoFile = lib.query2filename(query)
-        query = '?'.join([lib.volcanoLocationsKeys[Data_Source], query])
-        fileFound, address, source = lib.find_file(volcanoFile, loc=r'EMC_VOLCANOES_PATH', query=query)
-        Label = ' '.join([lib.volcanoLocationsValues[Data_Source].strip(), 'from',
-                          urlparse.urlparse(lib.volcanoLocationsKeys[Data_Source]).netloc.strip()])
+    if len(File_name.strip()) <= 0:
+        fileFound = False
+        address = ''
     else:
-       fileFound, address, source = lib.find_file(Alternate_FileName.strip(), loc=r'EMC_VOLCANOES_PATH')
+       fileFound, address, source = lib.find_file(File_name.strip(), loc=r'EMC_VOLCANOES_PATH')
 
     if not fileFound:
         raise Exception('volcano file "' + address +
@@ -164,13 +147,11 @@ def RequestInformation():
     sys.path.insert(0, "EMC_SRC_PATH")
     import IrisEMC_Paraview_Lib as lib
 
-    query = lib.volcanoLocationsQuery
-    if len(Alternate_FileName) <= 0:
-        volcanoFile = lib.query2filename(query)
-        query = '?'.join([lib.volcanoLocationsKeys[Data_Source], query])
-        fileFound, address, source = lib.find_file(volcanoFile, loc=r'EMC_VOLCANOES_PATH', query=query)
+    if len(File_name.strip()) <= 0:
+        fileFound = False
+        address = ''
     else:
-        fileFound, address, source = lib.find_file(Alternate_FileName.strip(), loc=r'EMC_VOLCANOES_PATH')
+        fileFound, address, source = lib.find_file(File_name.strip(), loc=r'EMC_VOLCANOES_PATH')
 
     if not fileFound:
         raise Exception('volcano file "' + address +
