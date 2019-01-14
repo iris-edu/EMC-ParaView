@@ -23,14 +23,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
-    2018-11-12 Manoch: added Platform check to load .csv files instead of .nc for Windows
-    2018-10-17 Manoch: R.1.2018.290 updates for R1
-    2018-09-13 Manoch: R.0.2018.256 added support for EMC_DEFAULT_GSV_MODEL
-    2018-05-09 Manoch: R.0.2018.129 added EMC_DEFAULT_2DMODEL tp fileDict
-    2018-04-27 Manoch: R.0.2018.117 updateid irisEMC_Files_URL
-    2018-04-23 Manoch: R.0.2018.113 updateid lat and lon limits for the world
+    2019-01-14 Manoch: V.2019.014 support for getting the default volcano data from IRIS EMC file repository
+    2018-11-12 Manoch: V.2018.316 added Platform check to load .csv files instead of .nc for Windows
+    2018-10-17 Manoch: V.2018.290 updates for R1
+    2018-09-13 Manoch: V.2018.256 added support for EMC_DEFAULT_GSV_MODEL
+    2018-05-09 Manoch: V.2018.129 added EMC_DEFAULT_2DMODEL tp fileDict
+    2018-04-27 Manoch: V.2018.117 updateid irisEMC_Files_URL
+    2018-04-23 Manoch: V.2018.113 updateid lat and lon limits for the world
                        added very low resolution coastline data file
-    2018-03-21 Manoch: R.0.2018.080 release
+    2018-03-21 Manoch: V.2018.080 release
 """
 
 import os
