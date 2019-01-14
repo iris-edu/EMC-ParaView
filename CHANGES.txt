@@ -10,6 +10,15 @@ COMMENTS/QUESTIONS:
 
 ---------------------------------------------------------
 
+=========================================================
+2019-01-14 R.1.5.3
+=========================================================
+- IrisEMC_Paraview_Lib.py now gets the default volcano data from IRIS EMC file repository that is a curated
+                          WOVOdate data
+- IrisEMC_Paraview_Param.py support for getting the default volcano data from IRIS EMC file repository
+- macros/macro_volcanoes.py now gets the default volcano data from IRIS EMC file repository
+- readers/read_volcanoes.py now gets the default volcano data from IRIS EMC file repository
+
 
 =========================================================
 2018-12-21 R.1.5.2
