@@ -9,13 +9,12 @@ from paraview.simple import *
 paraview.simple._DisableFirstRenderCameraReset()
 
 # create a new 'Show Volcano Locations'
-showVolcanoLocations1 = ShowVolcanoLocations(AlternateFileName='')
-showVolcanoLocations1.Data_Source = 0
+showVolcanoLocations1 = ShowVolcanoLocations()
 
 # get active view
 renderView1 = GetActiveViewOrCreate('RenderView')
 # uncomment following to set a specific view size
-# renderView1.ViewSize = [1826, 1077]
+# renderView1.ViewSize = [1296, 884]
 
 # show data in view
 showVolcanoLocations1Display = Show(showVolcanoLocations1, renderView1)
@@ -54,7 +53,7 @@ showVolcanoLocations1Display.PolarAxes.LastRadialAxisTextFontFile = ''
 showVolcanoLocations1Display.PolarAxes.SecondaryRadialAxesTextFontFile = ''
 
 # reset view to fit data
-# renderView1.ResetCamera()
+renderView1.ResetCamera()
 
 # get the material library
 materialLibrary1 = GetMaterialLibrary()
@@ -65,9 +64,6 @@ renderView1.Update()
 # change representation type
 showVolcanoLocations1Display.SetRepresentationType('Point Gaussian')
 
-# change solid color
-showVolcanoLocations1Display.DiffuseColor = [1.0, 0.0, 0.0]
-
 # Properties modified on showVolcanoLocations1Display
 showVolcanoLocations1Display.ShaderPreset = 'Triangle'
 
@@ -75,26 +71,20 @@ showVolcanoLocations1Display.ShaderPreset = 'Triangle'
 showVolcanoLocations1Display.GaussianRadius = 0.008588335043191911
 
 # Properties modified on showVolcanoLocations1Display
-showVolcanoLocations1Display.GaussianRadius = 0.0052050515413284305
-
-# Properties modified on showVolcanoLocations1Display
-showVolcanoLocations1Display.GaussianRadius = 0.00511830068230629
-
-# Properties modified on showVolcanoLocations1Display
-showVolcanoLocations1Display.GaussianRadius = 0.004684546387195588
-
-# Properties modified on showVolcanoLocations1Display
-showVolcanoLocations1Display.GaussianRadius = 0.004597795528173447
+showVolcanoLocations1Display.GaussianRadius = 0.006506314426660538
 
 # Properties modified on showVolcanoLocations1Display
 showVolcanoLocations1Display.GaussianRadius = 0.004164041233062744
 
+# change solid color
+showVolcanoLocations1Display.DiffuseColor = [1.0, 0.0, 0.0]
+
 #### saving camera placements for all active views
 
 # current camera placement for renderView1
-# renderView1.CameraPosition = [-0.1463538408279419, -0.5529114790260792, 4.934178739291951]
-# renderView1.CameraFocalPoint = [-0.1463538408279419, -0.5529114790260792, 0.03968733549118042]
-# renderView1.CameraParallelScale = 1.2667875913942117
+#renderView1.CameraPosition = [-0.1463538408279419, -0.5529114790260792, 4.934178739291951]
+#renderView1.CameraFocalPoint = [-0.1463538408279419, -0.5529114790260792, 0.03968733549118042]
+#renderView1.CameraParallelScale = 1.2667875913942117
 
 #### uncomment the following to render all views
 # RenderAllViews()
