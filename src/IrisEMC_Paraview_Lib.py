@@ -23,26 +23,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
-    2018-12-18 Manoch: R.1.2018.455 updated xyz2llz since it was returning longitude in radians and not degrees
-    2018-12-17 Manoch: R.1.2018.354 CSV file is now uses open rU to open for input as a text file with universal
+    2019-01-14 Manoch: V.2019.014 now gets the default volcano data from IRIS EMC file repository that is a curated
+                       WOVOdate data
+    2018-12-18 Manoch: V.2018.355 updated xyz2llz since it was returning longitude in radians and not degrees
+    2018-12-17 Manoch: V.2018.354 CSV file is now uses open rU to open for input as a text file with universal
                        (corrected typo)
-    2018-12-13 Manoch: R.1.2018.347 CSV file is now uses open rU to open for input as a text file with universal
+    2018-12-13 Manoch: V.2018.347 CSV file is now uses open rU to open for input as a text file with universal
                        newline interpretation. We are now using splitlines() to regardless of line ending
                        Fixed the issue with GeoCSV slab legend that displayed negative depths.
-    2018-12-12 Manoch: R.1.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
+    2018-12-12 Manoch: V.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
                        would mask the slab depth
-    2018-12-06 Manoch: R.1.2018.340 R1 release supports OS X, Linux, and Windows
+    2018-12-06 Manoch: V.2018.340 R1 release supports OS X, Linux, and Windows
     2018-11-12 Manoch: now find_file checks the OS to make sure .nc files are not requested on Windows platform
-    2018-10-17 Manoch: R.1.2018.290 updates for R1
-    2018-09-13 Manoch: R.0.2018.256 added support for 3D geoCSV files
-    2018-05-09 Manoch: R.0.2018.129 added support for 2D netCDF files
-    2018-04-30 Manoch: R.0.2018.120 modified query2file_name to accepth optional url argument
+    2018-10-17 Manoch: V.2018.290 updates for R1
+    2018-09-13 Manoch: V.2018.256 added support for 3D geoCSV files
+    2018-05-09 Manoch: V.2018.129 added support for 2D netCDF files
+    2018-04-30 Manoch: V.2018.120 modified query2file_name to accepth optional url argument
                        and add a simplified version of it to the begining of the file name.
                        This would allow the code to distinguish between files created from
                        two different sites but using the same query
-    2018-04-23 Manoch: R.0.2018.113 update lat and lon loops logic to avoid gaps at region
+    2018-04-23 Manoch: V.2018.113 update lat and lon loops logic to avoid gaps at region
                        boundaries due to selected step (inc)
-    2018-03-21 Manoch: R.0.2018.080 release
+    2018-03-21 Manoch: V.2018.080 release
 """
 
 import sys
