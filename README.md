@@ -26,7 +26,7 @@ COMMENTS/QUESTIONS:
         + your own GeoCSV boundary files
 
     - Show Volcano Locations:
-        + plot location of volcanoes using WOVOdat location data from geows.ds.iris.edu
+        + plot location of volcanoes using WOVOdat location data from ds.iris.edu
         + plot location of volcanoes using your own GeoCSV volcano location or other data-point files
 
     - Show Earthquake Locations:
