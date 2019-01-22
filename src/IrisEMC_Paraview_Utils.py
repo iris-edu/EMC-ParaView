@@ -20,19 +20,71 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  History:
-    2018-11-12 Manoch: added check_system to check OS
-    2018-10-17 Manoch: R.1.2018.290 updates for R1
-    2018-09-13 Manoch: R.0.2018.256 updated the isValueIn to ensure values are float
-    2018-03-21 Manoch: R.0.2018.080 release for ParaView support
+    2019-01-22 Manoch: V.2019.022 added datetime_to_int, datetime_to_float, remove_files
+    2018-11-12 Manoch: V.2018.316 added check_system to check OS
+    2018-10-17 Manoch: V.2018.290 updates for R1
+    2018-09-13 Manoch: V.2018.256 updated the isValueIn to ensure values are float
+    2018-03-21 Manoch: V.2018.080 release for ParaView support
     2015-06-08 Manoch: updated the parameter file message based on the changes
                in the main script
     2015-01-17 Manoch: created
 """
 
 import os
+import glob
 import platform
 import numpy as np
+import datetime
 from time import time
+
+
+def remove_files(pattern):
+    """remove files with given pattern in their name
+    Keyword arguments:
+        pattern: pattern to use to find files
+
+    Return values:
+       none
+    """
+    for f in glob.glob(pattern):
+        os.remove(f)
+
+
+def datetime_to_float(d):
+    """convert a given UTC date-time string to a float number (seconds since 1970-01-01T00:00:00
+    Keyword arguments:
+        d: date string to convert
+
+    Return values:
+       total_seconds: number of seconds since time 0 (1970-01-01 00:00:00 UTC
+    """
+    d = d.replace('/', '-').replace('T', ' ').split('.')[0]
+    t = datetime.datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    total_seconds = (t - epoch).total_seconds()
+    # total_seconds will be in decimals (millisecond precision)
+    return total_seconds
+
+
+def datetime_to_int(d, level='month'):
+    """convert a given UTC date-time string to an integer number (YYYMMDDHHMMSS format depending on the given level)
+    Keyword arguments:
+        d: date string to convert
+        level: conversion level ('year', 'month', 'day', 'hour', 'minute', 'second')
+
+    Return values:
+       int_value: the resulting integer value
+    """
+    switcher = ['year', 'month', 'day', 'hour', 'minute', 'second']
+
+    if level not in switcher:
+        return None
+    switch_index = switcher.index(level)
+    items = d.split('.')[0].replace('/', ' ').replace('T', ' ').replace('-', ' ').replace(':', ' ').strip().split()
+    int_value = 0
+    for i in range(switch_index + 1):
+        int_value += int(items[i]) * pow(100, len(switcher) - i - 1)
+    return int_value / pow(100, len(switcher) - switch_index - 1)
 
 
 def do_https():
