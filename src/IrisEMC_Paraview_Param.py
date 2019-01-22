@@ -23,6 +23,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2019-01-22 Manoch: V.2019.022 added animation directory under earthquakes path and introduced time_column
+                       for use with earthquake
     2019-01-14 Manoch: V.2019.014 support for getting the default volcano data from IRIS EMC file repository
     2018-11-12 Manoch: V.2018.316 added Platform check to load .csv files instead of .nc for Windows
     2018-10-17 Manoch: V.2018.290 updates for R1
@@ -83,12 +85,14 @@ else:
 if not ssl_available:
     earthquakeCatalogDict = {'%s//service.iris.edu/fdsnws/event/1/query' % HTTP_PROTOCOL:
                              'IRIS DMC FDSNWS event Web Service'}
-    earthquakeQuery = ("format=text&starttime=%s&minmag=%0.1f&maxmag=%0.1f&orderby=magnitude&mindepth=%0.1f&"""
+    earthquakeQuery = ("format=text&starttime=%s&endtime=%s&minmag=%0.1f&maxmag=%0.1f&"""
+                       "orderby=magnitude&mindepth=%0.1f&"""
                        "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 else:
     earthquakeCatalogDict = {'%s//earthquake.usgs.gov/fdsnws/event/1/query' % HTTP_PROTOCOL:
                                  'USGS Earthquake Hazards Program'}
-    earthquakeQuery = ("format=text&starttime=%s&minmag=%0.1f&maxmag=%0.1f&orderby=magnitude&mindepth=%0.1f&"""
+    earthquakeQuery = ("format=text&starttime=%s&endtime=%s&minmag=%0.1f&maxmag=%0.1f&"""
+                       "orderby=magnitude&mindepth=%0.1f&"""
                        "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 
 # sort the earthquake dictionary based on the values (organization)
@@ -107,7 +111,8 @@ pathDict = {'EMC_MAIN_PATH': topDir,
             'EMC_MODELS_PATH': os.path.join(topDir, 'data', 'models'),
             'EMC_BOUNDARIES_PATH': os.path.join(topDir, 'data', 'boundaries'),
             'EMC_VOLCANOES_PATH': os.path.join(topDir, 'data', 'volcanoes'),
-            'EMC_EARTHQUAKES_PATH': os.path.join(topDir, 'data', 'earthquakes')}
+            'EMC_EARTHQUAKES_PATH': os.path.join(topDir, 'data', 'earthquakes'),
+            'EMC_EQ_ANIMATION_PATH': os.path.join(topDir, 'data', 'earthquakes', 'animation')}
 
 for key in pathDict.keys():
     utils.makePath(pathDict[key])
@@ -121,7 +126,7 @@ filesDict = {'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent', 'EMC_DEFAULT_2DMODEL': 
 
 # default column names for GeoCSV files. User can redefine these in the GeoCSV header
 columnKeys = {'latitude_column': 'latitude', 'longitude_column': 'longitude', 'depth_column': 'depth',
-              'elevation_column': 'elevation', 'magnitude_column': 'magnitude'}
+              'elevation_column': 'elevation', 'magnitude_column': 'magnitude', 'time_column': 'time'}
 
 # USGS Slab 1.0 files, will populate the drop down menu
 # NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
