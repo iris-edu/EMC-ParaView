@@ -32,8 +32,8 @@ Properties = dict(
     Longitude_begin='',
     Longitude_end='',
     Longitude_variable='longitude',
-    Depth_begin=0,
-    Depth_end=200,
+    Depth_begin='0.0',
+    Depth_end='200.0',
     Depth_variable='depth',
     Vertical_Scaling=1,
     Sampling=5
@@ -41,7 +41,7 @@ Properties = dict(
 
 
 def RequestData():
-    # R.0.2018.256
+    # V.2019.022
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
@@ -61,8 +61,9 @@ def RequestData():
             ext = param.filesExtDict['ssl']
         else:
             ext = param.filesExtDict['geo']
-
-    if Depth_begin > Depth_end:
+    depth_begin = float(Depth_begin)
+    depth_end = float(Depth_end)
+    if depth_begin > depth_end:
         raise Exception('Begin Depth < End Depth! Aborting.')
 
     Latitude_begin, Latitude_end, Longitude_begin, Longitude_end = lib.get_area(Area, Latitude_begin, Latitude_end,
@@ -89,13 +90,13 @@ def RequestData():
     if extension.lower() in ['.nc', '.grd']:
         X, Y, Z, V, meta = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
                                                  (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                 Depth_begin, Depth_end, Vertical_Scaling, Sampling)
+                                                 depth_begin, depth_end, Vertical_Scaling, Sampling)
     else:
         try:
             X, Y, Z, V, meta = lib.read_geocsv_model_3d(address,
                                                         (Latitude_begin, Longitude_begin), (Latitude_end,
                                                                                             Longitude_end),
-                                                        Depth_begin, Depth_end, Vertical_Scaling, Sampling)
+                                                        depth_begin, depth_end, Vertical_Scaling, Sampling)
         except Exception:
             raise Exception('cannot recognize model file "' + address + '"! Aborting.')
 
@@ -176,6 +177,8 @@ def RequestInformation():
     import IrisEMC_Paraview_Utils as utils
     import IrisEMC_Paraview_Param as param
 
+    depth_begin = float(Depth_begin)
+    depth_end = float(Depth_end)
     File_name = File_name.strip()
     ext = None
     if File_name in param.filesDict.values():
@@ -193,13 +196,13 @@ def RequestInformation():
     if extension.lower() == '.nc':
         nx, ny, nz = lib.read_netcdf_model(address, Latitude_variable, Longitude_variable, Depth_variable,
                                                  (Latitude_begin, Longitude_begin), (Latitude_end, Longitude_end),
-                                                 Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling, extent=True)
+                                                 depth_begin, depth_end, Vertical_Scaling, inc=Sampling, extent=True)
     else:
         try:
             nx, ny, nz = lib.read_geocsv_model_3d(address,
                                                   (Latitude_begin, Longitude_begin), (Latitude_end,
                                                                                       Longitude_end),
-                                                  Depth_begin, Depth_end, Vertical_Scaling, inc=Sampling,
+                                                  depth_begin, depth_end, Vertical_Scaling, inc=Sampling,
                                                   extent=True)
         except Exception:
             raise Exception('cannot recognize model file "' + address + '"! Aborting.')
