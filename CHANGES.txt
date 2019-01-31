@@ -11,6 +11,22 @@ COMMENTS/QUESTIONS:
 ---------------------------------------------------------
 
 =========================================================
+2019-01-30 R.1.5.4
+=========================================================
+- documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.030 Added
+- documents/2015-09-16_NEAR_COAST_OF_CENTRAL_CHILE_09-14_09626.mov V.2019.030 Added
+- IrisEMC_Paraview_Utils      V.2019.030 datetime_to_float now accepts date with or withut time
+- readers/read_3d_models.py   V.2019.022 modified to accept depth_begin and depth_end as floats
+- readers/read_earthquakes.py V.2019.022 read_3d_models.py support for float depth begin and end
+- IrisEMC_Paraview_Param      V.2019.022 added animation directory under earthquakes path and
+                                         introduced time_column for use with earthquake" IrisEMC_Paraview_Param.py
+- readers/read_earthquakes.py V.2019.022 added the time_end parameter and renames start_time to time_begin so user
+                                         can limit event request to a selected time window. Introduced the Frame_Tag
+                                         parameter in support of the animation
+                                         reader now can output frames for animation
+- IrisEMC_Paraview_Utils      V.2019.022 added datetime_to_int, datetime_to_float, remove_files
+
+=========================================================
 2019-01-14 R.1.5.3
 =========================================================
 - IrisEMC_Paraview_Lib.py now gets the default volcano data from IRIS EMC file repository that is a curated
