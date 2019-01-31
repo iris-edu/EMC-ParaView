@@ -23,6 +23,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2019-01-30 Manoch: V.2019.030 event service call request order changed from magnitude to time-asc
     2019-01-22 Manoch: V.2019.022 added animation directory under earthquakes path and introduced time_column
                        for use with earthquake
     2019-01-14 Manoch: V.2019.014 support for getting the default volcano data from IRIS EMC file repository
@@ -86,13 +87,13 @@ if not ssl_available:
     earthquakeCatalogDict = {'%s//service.iris.edu/fdsnws/event/1/query' % HTTP_PROTOCOL:
                              'IRIS DMC FDSNWS event Web Service'}
     earthquakeQuery = ("format=text&starttime=%s&endtime=%s&minmag=%0.1f&maxmag=%0.1f&"""
-                       "orderby=magnitude&mindepth=%0.1f&"""
+                       "orderby=time-asc&mindepth=%0.1f&"""
                        "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 else:
     earthquakeCatalogDict = {'%s//earthquake.usgs.gov/fdsnws/event/1/query' % HTTP_PROTOCOL:
                                  'USGS Earthquake Hazards Program'}
     earthquakeQuery = ("format=text&starttime=%s&endtime=%s&minmag=%0.1f&maxmag=%0.1f&"""
-                       "orderby=magnitude&mindepth=%0.1f&"""
+                       "orderby=time-asc&mindepth=%0.1f&"""
                        "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 
 # sort the earthquake dictionary based on the values (organization)
