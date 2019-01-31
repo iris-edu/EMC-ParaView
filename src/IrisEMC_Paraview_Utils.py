@@ -20,6 +20,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  History:
+    2019-01-30 Manoch: V.2019.030 datetime_to_float now accepts date with or withut time
     2019-01-22 Manoch: V.2019.022 added datetime_to_int, datetime_to_float, remove_files
     2018-11-12 Manoch: V.2018.316 added check_system to check OS
     2018-10-17 Manoch: V.2018.290 updates for R1
@@ -59,7 +60,10 @@ def datetime_to_float(d):
        total_seconds: number of seconds since time 0 (1970-01-01 00:00:00 UTC
     """
     d = d.replace('/', '-').replace('T', ' ').split('.')[0]
-    t = datetime.datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+    if ' ' not in d:
+        t = datetime.datetime.strptime(d, "%Y-%m-%d")
+    else:
+        t = datetime.datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
     epoch = datetime.datetime.utcfromtimestamp(0)
     total_seconds = (t - epoch).total_seconds()
     # total_seconds will be in decimals (millisecond precision)
