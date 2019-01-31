@@ -296,7 +296,7 @@ def read_geocsv(gfile_name, is_2d=False):
     for i in range(len(lines)):
         if len(lines[i].strip()) <= 0:
                 continue
-        elif lines[i].strip()[0] == '#':
+        elif lines[i].strip().startswith('#'):
             this_line = lines[i].strip()[1:]
             if len(this_line.strip()) <= 0:
                 continue
