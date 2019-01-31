@@ -1,5 +1,5 @@
 Name = 'Read3DModel'
-Label = 'Read 3D Model'
+Label = 'Read 3D Models'
 FilterCategory = 'IRIS EMC'
 Help = 'Read and display 3D Earth models.'
 
@@ -41,7 +41,7 @@ Properties = dict(
 
 
 def RequestData():
-    # V.2019.022
+    # V.2019.030
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
