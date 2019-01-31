@@ -20,7 +20,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  History:
-    2019-01-30 Manoch: V.2019.030 datetime_to_float now accepts date with or withut time
+    2019-01-30 Manoch: V.2019.030 datetime_to_float now accepts date with or without time
     2019-01-22 Manoch: V.2019.022 added datetime_to_int, datetime_to_float, remove_files
     2018-11-12 Manoch: V.2018.316 added check_system to check OS
     2018-10-17 Manoch: V.2018.290 updates for R1
