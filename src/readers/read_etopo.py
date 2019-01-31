@@ -1,5 +1,5 @@
 Name = 'ReadTopo'
-Label = 'Topo elevation data'
+Label = 'Topo Elevation Data'
 FilterCategory = 'IRIS EMC'
 Help = 'Read and display surface elevation changes, using elevation data file.'
 
@@ -52,7 +52,7 @@ Properties = dict(
 )
 
 def RequestData():
-    # R.0.2018.080
+    # V.2019.030
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
