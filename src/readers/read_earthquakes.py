@@ -48,6 +48,7 @@ Properties = dict(
     Magnitude_Begin=6,
     Magnitude_End=10,
     Vertical_Scaling=1,
+    Frame_Length_sec=3600,
     Frame_Tag='',
     Time_Begin='2000-01-01',
     Time_End=''
@@ -55,7 +56,7 @@ Properties = dict(
 
 
 def RequestData():
-    # V.2019.022
+    # V.2019.030
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
@@ -142,9 +143,9 @@ def RequestData():
     time = []
     frame_tag = Frame_Tag.strip()
     frame = dict()
-    frame_key = None
+    frame_key = Frame_Length_sec
 
-    for i in range(1, len(lines)):
+    for i in range(len(lines)):
         line = lines[i].strip()
         values = line.strip().split(params['delimiter'].strip())
         lat_value = float(values[lat_index])
@@ -173,8 +174,14 @@ def RequestData():
             day_value = Utils.datetime_to_int(time[-1], level='day')
             scalar_t.InsertNextValue(day_value)
             if frame_tag:
-                frame_key = str(int(Utils.datetime_to_float(time_value)))
-                frame[frame_key] = '%f,%f,%f,%0.2f,%0.1f,%d' % (x, y, z, depth[-1], mag[-1], day_value)
+                frame_time = int(Utils.datetime_to_float(time_value) - Utils.datetime_to_float(Time_Begin))
+                if frame_time <= frame_key:
+                    frame[str(frame_key)] = '%s\n%f,%f,%f,%0.2f,%0.1f,%d' % (
+                        frame[str(frame_key)], x, y, z, depth[-1], mag[-1], day_value)
+                else:
+                    frame_key += Frame_Length_sec
+                    frame[str(frame_key)] = '%f,%f,%f,%0.2f,%0.1f,%d' % (x, y, z, depth[-1], mag[-1], day_value)
+
     # save animation frames
     if frame_tag:
         Utils.remove_files(os.path.join('EMC_EQ_ANIMATION_PATH', '%s_*.txt') % frame_tag)
@@ -184,7 +191,7 @@ def RequestData():
         eq_list = 'X,Y,Z,Depth,Mag,Year-Month'
         for i, key in enumerate(key_list):
             eq_list = '%s\n%s' % (eq_list, frame[str(key)])
-            with open(os.path.join('EMC_EQ_ANIMATION_PATH', '%s_%09d.txt' % (frame_tag, key - key0)), 'w') as fp:
+            with open(os.path.join('EMC_EQ_ANIMATION_PATH', '%s_%012d.txt' % (frame_tag, key - key0)), 'w') as fp:
                 fp.write('%s' % eq_list)
     pdo.SetPoints(pts)
     pdo.GetPointData().AddArray(scalar_m)
