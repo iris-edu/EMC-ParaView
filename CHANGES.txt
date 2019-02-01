@@ -11,6 +11,16 @@ COMMENTS/QUESTIONS:
 ---------------------------------------------------------
 
 =========================================================
+2019-01-30 R.1.5.5
+=========================================================
+- readers/read_earthquakes.py V.2019.031 now produces animation frame files for both single frame and accumulative modes
+- documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.031 Updated earthquake animation section to include both
+                                                single frame and accumulative modes
+- documents/SINGLE_2015-09-16_NEAR_COAST_OF_CENTRAL_CHILE_09-14_09626.mov V.2019.031 added single frame video
+- documents/2015-09-16_NEAR_COAST_OF_CENTRAL_CHILE_09-14_09626.mov V.2019.031 recreated to have the same style as the
+                                                                    single frame video
+
+=========================================================
 2019-01-30 R.1.5.4
 =========================================================
 - documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.030 Added
