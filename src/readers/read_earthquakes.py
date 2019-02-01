@@ -56,7 +56,7 @@ Properties = dict(
 
 
 def RequestData():
-    # V.2019.030
+    # V.2019.031
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     import paraview.simple as simple
@@ -143,6 +143,7 @@ def RequestData():
     time = []
     frame_tag = Frame_Tag.strip()
     frame = dict()
+    frame_single = dict()
     frame_key = Frame_Length_sec
 
     for i in range(len(lines)):
@@ -175,12 +176,16 @@ def RequestData():
             scalar_t.InsertNextValue(day_value)
             if frame_tag:
                 frame_time = int(Utils.datetime_to_float(time_value) - Utils.datetime_to_float(Time_Begin))
-                if frame_time <= frame_key:
+                if frame_time < frame_key:
                     frame[str(frame_key)] = '%s\n%f,%f,%f,%0.2f,%0.1f,%d' % (
                         frame[str(frame_key)], x, y, z, depth[-1], mag[-1], day_value)
+                    if frame_time >= frame_key - Frame_Length_sec:
+                        frame_single[str(frame_key)] = '%s\n%f,%f,%f,%0.2f,%0.1f,%d' % (
+                            frame_single[str(frame_key)], x, y, z, depth[-1], mag[-1], day_value)
                 else:
                     frame_key += Frame_Length_sec
                     frame[str(frame_key)] = '%f,%f,%f,%0.2f,%0.1f,%d' % (x, y, z, depth[-1], mag[-1], day_value)
+                    frame_single[str(frame_key)] = '%f,%f,%f,%0.2f,%0.1f,%d' % (x, y, z, depth[-1], mag[-1], day_value)
 
     # save animation frames
     if frame_tag:
@@ -193,6 +198,10 @@ def RequestData():
             eq_list = '%s\n%s' % (eq_list, frame[str(key)])
             with open(os.path.join('EMC_EQ_ANIMATION_PATH', '%s_%012d.txt' % (frame_tag, key - key0)), 'w') as fp:
                 fp.write('%s' % eq_list)
+            eq = 'X,Y,Z,Depth,Mag,Year-Month\n%s' % frame_single[str(key)]
+            with open(os.path.join('EMC_EQ_ANIMATION_PATH', '%s_single_%012d.txt' % (
+                    frame_tag, key - key0)), 'w') as fp:
+                fp.write('%s' % eq)
     pdo.SetPoints(pts)
     pdo.GetPointData().AddArray(scalar_m)
     pdo.GetPointData().AddArray(scalar_d)
