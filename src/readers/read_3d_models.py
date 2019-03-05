@@ -41,7 +41,7 @@ Properties = dict(
 
 
 def RequestData():
-    # V.2019.030
+    # V.2019.060
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
@@ -97,8 +97,8 @@ def RequestData():
                                                         (Latitude_begin, Longitude_begin), (Latitude_end,
                                                                                             Longitude_end),
                                                         depth_begin, depth_end, Vertical_Scaling, Sampling)
-        except Exception:
-            raise Exception('cannot recognize model file "' + address + '"! Aborting.')
+        except Exception as e:
+            raise Exception('cannot recognize model file "' + address + '"! Aborting.\n' + str(e))
 
     nx = len(X)
     if nx <= 0:
