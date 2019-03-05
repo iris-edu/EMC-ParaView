@@ -11,6 +11,13 @@ COMMENTS/QUESTIONS:
 ---------------------------------------------------------
 
 =========================================================
+2019-03-01 R.1.5.6
+=========================================================
+- IrisEMC_Paraview_Lib.py     V.2019.059 added missing_value support to read_netcdf_model
+- readers/read_3d_models.py   V.2019.060 added the exception error to output message
+- readers/read_2d_models.py   V.2019.060 added the exception error to output message
+
+=========================================================
 2019-01-30 R.1.5.5
 =========================================================
 - readers/read_earthquakes.py V.2019.031 now produces animation frame files for both single frame and accumulative modes
