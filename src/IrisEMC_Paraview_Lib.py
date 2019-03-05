@@ -23,6 +23,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2019-03-01 Manoch: V.2019.060 added missing_value support to read_netcdf_model, read_geocsv_model_2d and
+                       read_geocsv_model_3d
     2019-01-14 Manoch: V.2019.014 now gets the default volcano data from IRIS EMC file repository that is a curated
                        WOVOdate data
     2018-12-18 Manoch: V.2018.355 updated xyz2llz since it was returning longitude in radians and not degrees
@@ -759,8 +761,11 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, in
     meta = {'depth': [], 'lat': [100, -100], 'lon': [400, -400], 'source': model_file}
 
     X = np.zeros((nx, ny, nz))
+    X[:] = np.nan
     Y = np.zeros((nx, ny, nz))
+    Y[:] = np.nan
     Z = np.zeros((nx, ny, nz))
+    Z[:] = np.nan
 
     for i, values in enumerate(data):
         lon_val = float(lon_map[utils.float_key(values[lon_index])])
@@ -785,7 +790,12 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, in
             for l, var_val in enumerate(variables):
                 if var_val not in V.keys():
                     V[var_val] = np.zeros((nx, ny, nz))
-                V[var_val][ii, jj, kk] = float(values[var_index[var_val]])
+                    V[var_val][:] = np.nan
+                if '_'.join([var_val, 'missing_value']) in params:
+                    # skip the designated missing_value
+                    if float(values[var_index[var_val]]) == float(params['_'.join([var_val, 'missing_value'])]):
+                        continue
+                    V[var_val][ii, jj, kk] = float(values[var_index[var_val]])
 
     return X, Y, Z, V, meta
 
@@ -852,6 +862,11 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
         return nx - 1, ny - 1, nz - 1
     index = [-1, -1, -1]
     meta = {'depth': [], 'lat': [100, -100], 'lon': [400, -400], 'source': model_file}
+
+    missing_value = None
+    if hasattr(data.variables[var], 'missing_value'):
+        missing_value = float(data.variables[var].missing_value)
+
     for l, var_val in enumerate(variables):
         X = np.zeros((nx, ny, nz))
         Y = np.zeros((nx, ny, nz))
@@ -881,7 +896,18 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
                         index[lat_index] = k
                         index[lon_index] = i
 
-                        v[ii, jj, kk] = data_in[index[0]][index[1]][index[2]]
+                        this_value = data_in[index[0]][index[1]][index[2]]
+
+                        if this_value is None:
+                            v[ii, jj, kk] = None
+                        elif this_value is not None:
+                            if this_value == missing_value:
+                                v[ii, jj, kk] = None
+                                this_value = None
+                            else:
+                                v[ii, jj, kk] = this_value
+                        else:
+                            v[ii, jj, kk] = this_value
 
         V[var_val] = v
     data.close()
@@ -963,8 +989,11 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
 
     for l, var_val in enumerate(variables):
         X = np.zeros((nx, ny, nz))
+        X[:] = np.nan
         Y = np.zeros((nx, ny, nz))
+        Y[:] = np.nan
         Z = np.zeros((nx, ny, nz))
+        Z[:] = np.nan
 
         # we want the grid to be in x, y z order (longitude, depth, latitude)
         data.sort(key=itemgetter(lat_index, lon_index))
@@ -993,8 +1022,12 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
 
                 if var_val not in V.keys():
                     V[var_val] = np.zeros((nx, ny, nz))
-                # V[var_val][ii, jj, kk] = float(this_value) * float(unit_factor)
-                V[var_val][ii, jj, kk] = float(this_value)
+                    V[var_val][:] = np.nan
+                if '_'.join([var_val, 'missing_value']) in params:
+                    # skip the designated missing_value
+                    if float(this_value) == float(params['_'.join([var_val, 'missing_value'])]):
+                        continue
+                    V[var_val][ii, jj, kk] = float(this_value)
 
     return X, Y, Z, V, meta
 
