@@ -11,6 +11,16 @@ COMMENTS/QUESTIONS:
 ---------------------------------------------------------
 
 =========================================================
+2019-03-26 R.1.5.6.1
+=========================================================
+- readers/read_3d_models.py   2019.079 added support for model file names without extension
+- readers/read_2d_models.py   2019.079 added support for model file names without extension
+- documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.091 updated
+- documents/IRIS_EMC_ParaView_Plugins_Installation_Guide.pdf V.2019.091 added
+- documents/IRIS_EMC_ParaView_Plugins_Exercise_1_EQ.pdf V.2019.091 added
+- documents/IRIS_EMC_ParaView_Plugins_Exercise_2_Model.pdf V.2019.091 added
+
+=========================================================
 2019-03-01 R.1.5.6
 =========================================================
 - IrisEMC_Paraview_Lib.py     V.2019.059 added missing_value support to read_netcdf_model
