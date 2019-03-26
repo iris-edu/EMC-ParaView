@@ -41,7 +41,7 @@ Properties = dict(
 
 
 def RequestData():
-    # V.2019.060
+    # V.2019.079
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
@@ -56,7 +56,8 @@ def RequestData():
 
     File_name = File_name.strip()
     ext = None
-    if File_name in param.filesDict.values():
+    if File_name in param.filesDict.values() or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
+                                                     File_name.lower().endswith(param.filesExtDict['geo'].lower())):
         if utils.support_nc():
             ext = param.filesExtDict['ssl']
         else:
@@ -181,7 +182,8 @@ def RequestInformation():
     depth_end = float(Depth_end)
     File_name = File_name.strip()
     ext = None
-    if File_name in param.filesDict.values():
+    if File_name in param.filesDict.values() or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
+                                                     File_name.lower().endswith(param.filesExtDict['geo'].lower())):
         if utils.support_nc():
             ext = param.filesExtDict['ssl']
         else:
