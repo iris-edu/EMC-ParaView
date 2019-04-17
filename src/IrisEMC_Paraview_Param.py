@@ -23,6 +23,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2019-04-17 Manoch: V.2019.107 usgsSlab_URL is directed to IRIS for now to avoid issues with .csv files
     2019-01-30 Manoch: V.2019.030 event service call request order changed from magnitude to time-asc
     2019-01-22 Manoch: V.2019.022 added animation directory under earthquakes path and introduced time_column
                        for use with earthquake
@@ -77,7 +78,11 @@ irisEMC_Files_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTO
 if not ssl_available:
     usgsSlab_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
 else:
-    usgsSlab_URL = "%s//earthquake.usgs.gov/static/lfs/data/slab/models/" % HTTP_PROTOCOL
+    # usgsSlab_URL = "%s//earthquake.usgs.gov/static/lfs/data/slab/models/" % HTTP_PROTOCOL
+
+    # For now we serve the slabs from IRIS to make sure we have full support for the CSV version
+    # Manoch 2019-04-17
+    usgsSlab_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
 
 # earthquake catalogue sources
 # Note: at this time only GeoCSV format is supported for earthquake files
