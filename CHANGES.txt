@@ -9,6 +9,16 @@ COMMENTS/QUESTIONS:
     Please contact manoch@iris.washington.edu
 
 ---------------------------------------------------------
+=========================================================
+2019-03-26 R.1.5.6.2
+=========================================================
+
+- documents/IRIS_EMC_ParaView_Plugins_Exercise_2_Model.pdf V.2019.091 corrected the inverted latitude begin/end
+- IrisEMC_Paraview_Param                                   V.2019.107 usgsSlab_URL is directed to IRIS for now to
+                                                           avoid issues with .csv files
+- IrisEMC_Paraview_Lib.py                                  V.2019.107 corrected a statement spacing in
+                                                           read_geocsv_model_2d and read_geocsv_model_3d
+                                                           that was preventing correct data export in some cases
 
 =========================================================
 2019-03-26 R.1.5.6.1
@@ -42,7 +52,7 @@ COMMENTS/QUESTIONS:
 =========================================================
 - documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.030 Added
 - documents/2015-09-16_NEAR_COAST_OF_CENTRAL_CHILE_09-14_09626.mov V.2019.030 Added
-- IrisEMC_Paraview_Utils      V.2019.030 datetime_to_float now accepts date with or withut time
+- IrisEMC_Paraview_Utils      V.2019.030 datetime_to_float now accepts date with or without time
 - readers/read_3d_models.py   V.2019.022 modified to accept depth_begin and depth_end as floats
 - readers/read_earthquakes.py V.2019.022 read_3d_models.py support for float depth begin and end
 - IrisEMC_Paraview_Param      V.2019.022 added animation directory under earthquakes path and
