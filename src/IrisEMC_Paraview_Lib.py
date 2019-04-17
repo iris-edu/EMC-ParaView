@@ -23,6 +23,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
+    2019-04-17 Manoch: V.2019.107 corrected a statement spacing in read_geocsv_model_2d and read_geocsv_model_3d
+                       that was preventing correct data export in some cases
     2019-03-01 Manoch: V.2019.060 added missing_value support to read_netcdf_model, read_geocsv_model_2d and
                        read_geocsv_model_3d
     2019-01-14 Manoch: V.2019.014 now gets the default volcano data from IRIS EMC file repository that is a curated
@@ -468,7 +470,6 @@ def find_file(address, loc, query='', ext=None):
     # for default files, the calling script sends the proper extension to use depending on the OS support
     if ext is not None:
         address = ''.join([address, ext])
-
     if address.lower().endswith('.nc') and not utils.support_nc():
         print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
         return False, address, address
@@ -795,7 +796,7 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, in
                     # skip the designated missing_value
                     if float(values[var_index[var_val]]) == float(params['_'.join([var_val, 'missing_value'])]):
                         continue
-                    V[var_val][ii, jj, kk] = float(values[var_index[var_val]])
+                V[var_val][ii, jj, kk] = float(values[var_index[var_val]])
 
     return X, Y, Z, V, meta
 
@@ -1027,7 +1028,7 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
                     # skip the designated missing_value
                     if float(this_value) == float(params['_'.join([var_val, 'missing_value'])]):
                         continue
-                    V[var_val][ii, jj, kk] = float(this_value)
+                V[var_val][ii, jj, kk] = float(this_value)
 
     return X, Y, Z, V, meta
 
