@@ -81,9 +81,9 @@ def RequestData():
     filename = lib.file_name(File_name)
     if len(Label.strip()) <= 0:
         if source == filename:
-           Label = "%s "%(filename)
+           Label = "%s " % (filename)
         else:
-           Label = "%s from %s "%(filename, source)
+           Label = "%s from %s " % (filename, source)
 
     sg = self.GetOutput()  # vtkPolyData
 
