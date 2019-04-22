@@ -23,7 +23,7 @@ NumberOfInputs = 0
 OutputDataType = 'vtkStructuredGrid'
 
 Properties = dict(
-    FileName="EMC_DEFAULT_2DMODEL",
+    File_name="EMC_DEFAULT_2DMODEL",
     Area=1,
     Roughness='1',
     Depth_Bias='0.0',
@@ -40,7 +40,7 @@ Properties = dict(
 
 
 def RequestData():
-    # V.2019.079
+    # V.2019.112
     import sys
     sys.path.insert(0, r'EMC_SRC_PATH')
     from paraview.simple import RenameSource, GetActiveViewOrCreate, ColorBy, GetDisplayProperties, GetActiveSource
@@ -53,7 +53,7 @@ def RequestData():
     import IrisEMC_Paraview_Utils as utils
     import IrisEMC_Paraview_Param as param
 
-    FileName = FileName.strip()
+    File_name = File_name.strip()
     ext = None
     if File_name in param.filesDict.values() or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
                                                      File_name.lower().endswith(param.filesExtDict['geo'].lower())):
@@ -71,11 +71,11 @@ def RequestData():
         raise Exception('Latitude, Longitude and Variable are required')
 
     # make sure we have input files
-    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_MODELS_PATH', ext=ext)
+    fileFound, address, source = lib.find_file(File_name, loc=r'EMC_MODELS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "' + address + '" not found! Aborting.')
 
-    filename = lib.file_name(FileName)
+    filename = lib.file_name(File_name)
     if len(Label.strip()) <= 0:
         if source == filename:
            Label = "%s " % filename
@@ -150,7 +150,7 @@ def RequestData():
 
     data = vtk.vtkStringArray()
     data.SetName('Source')
-    data.InsertNextValue(FileName)
+    data.InsertNextValue(File_name)
     fieldData.AddArray(data)
 
     Label2 = " - %s (lat:%0.1f,%0.1f, lon:%0.1f,%0.1f)" % (lib.areaValues[Area], meta['lat'][0], meta['lat'][1],
@@ -166,7 +166,7 @@ def RequestInformation():
     import IrisEMC_Paraview_Utils as utils
     import IrisEMC_Paraview_Param as param
 
-    FileName = FileName.strip()
+    File_name = File_name.strip()
     ext = None
     if File_name in param.filesDict.values() or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
                                                      File_name.lower().endswith(param.filesExtDict['geo'].lower())):
@@ -175,7 +175,7 @@ def RequestInformation():
         else:
             ext = param.filesExtDict['geo']
 
-    fileFound, address, source = lib.find_file(FileName, loc=r'EMC_MODELS_PATH', ext=ext)
+    fileFound, address, source = lib.find_file(File_name, loc=r'EMC_MODELS_PATH', ext=ext)
     if not fileFound:
         raise Exception('model file "'+address+'" not found! Aborting.')
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = lib.get_area(Area,
