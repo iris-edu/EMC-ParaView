@@ -1,3 +1,6 @@
+import os
+import IrisEMC_Paraview_Utils as utils
+
 """
  NAME: IrisEMC_Paraview-Param.py - EMC ParaView Support parameters
 
@@ -5,7 +8,7 @@
 
  DESCRIPTION: These parameters are the default values for the IRIS EMC Paraview Python scripts
 
- Copyright (C) 2018  Product Team, IRIS Data Management Center
+ Copyright (C) 2021  Product Team, IRIS Data Management Center
 
     This is a free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,23 +26,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
-    2019-04-17 Manoch: V.2019.107 usgsSlab_URL is directed to IRIS for now to avoid issues with .csv files
-    2019-01-30 Manoch: V.2019.030 event service call request order changed from magnitude to time-asc
-    2019-01-22 Manoch: V.2019.022 added animation directory under earthquakes path and introduced time_column
+    2021-10-03 Manoch: v.2021.276 Python 3 release r2
+    2019-04-17 Manoch: v.2019.107 usgsSlab_URL is directed to IRIS for now to avoid issues with .csv files
+    2019-01-30 Manoch: v.2019.030 event service call request order changed from magnitude to time-asc
+    2019-01-22 Manoch: v.2019.022 added animation directory under earthquakes path and introduced time_column
                        for use with earthquake
-    2019-01-14 Manoch: V.2019.014 support for getting the default volcano data from IRIS EMC file repository
-    2018-11-12 Manoch: V.2018.316 added Platform check to load .csv files instead of .nc for Windows
-    2018-10-17 Manoch: V.2018.290 updates for R1
-    2018-09-13 Manoch: V.2018.256 added support for EMC_DEFAULT_GSV_MODEL
-    2018-05-09 Manoch: V.2018.129 added EMC_DEFAULT_2DMODEL tp fileDict
-    2018-04-27 Manoch: V.2018.117 updateid irisEMC_Files_URL
-    2018-04-23 Manoch: V.2018.113 updateid lat and lon limits for the world
+    2019-01-14 Manoch: v.2019.014 support for getting the default volcano data from IRIS EMC file repository
+    2018-11-12 Manoch: v.2018.316 added Platform check to load .csv files instead of .nc for Windows
+    2018-10-17 Manoch: v.2018.290 updates for R1
+    2018-09-13 Manoch: v.2018.256 added support for EMC_DEFAULT_GSV_MODEL
+    2018-05-09 Manoch: v.2018.129 added EMC_DEFAULT_2DMODEL tp fileDict
+    2018-04-27 Manoch: v.2018.117 updateid irisEMC_Files_URL
+    2018-04-23 Manoch: v.2018.113 updateid lat and lon limits for the world
                        added very low resolution coastline data file
-    2018-03-21 Manoch: V.2018.080 release
+    2018-03-21 Manoch: v.2018.080 release
 """
 
-import os
-import IrisEMC_Paraview_Utils as utils 
 
 # see if SSL is available for HTTPS requests
 ssl_available = utils.do_https()
@@ -48,61 +50,61 @@ if not ssl_available:
     HTTP_PROTOCOL = 'http:'
 
 
-def sortDictByValue(thisDict):
+def sort_dict_by_value(dictionary):
     """Splits a Python dictionary to two lists containing keys and values sorted by values.
 
     Keyword arguments:
     thisDict: a Python dictionary
 
     Return values:
-    keys: list of keys in the distionary
+    keys: list of keys in the dictionary
     values: list of values in the dictionary
     """
     from operator import itemgetter
     keys = []
     values = []
-    if len(thisDict.keys()) == 1:
-       return thisDict.keys(), thisDict.values()
+    if len(list(dictionary.keys())) == 1:
+        return list(dictionary.keys()), list(dictionary.values())
 
-    for key, value in sorted(thisDict.items(), key=itemgetter(1)):
-       keys.append(key)
-       values.append(value)
+    for _key, _value in sorted(list(dictionary.items()), key=itemgetter(1)):
+        keys.append(_key)
+        values.append(_value)
     return keys, values
 
 
 # URLs
-irisEMC_Files_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
+irisEMC_Files_URL = f"{HTTP_PROTOCOL}//ds.iris.edu/files/products/emc/emc-files/"
 
 # usgsEvent_URL = "%s//earthquake.usgs.gov/fdsnws/event/1/query?format=text" % HTTP_PROTOCOL
 
 if not ssl_available:
-    usgsSlab_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
+    usgsSlab_URL = f"{HTTP_PROTOCOL}//ds.iris.edu/files/products/emc/emc-files/"
 else:
     # usgsSlab_URL = "%s//earthquake.usgs.gov/static/lfs/data/slab/models/" % HTTP_PROTOCOL
 
     # For now we serve the slabs from IRIS to make sure we have full support for the CSV version
     # Manoch 2019-04-17
-    usgsSlab_URL = "%s//ds.iris.edu/files/products/emc/emc-files/" % HTTP_PROTOCOL
+    usgsSlab_URL = f"{HTTP_PROTOCOL}//ds.iris.edu/files/products/emc/emc-files/"
 
 # earthquake catalogue sources
 # Note: at this time only GeoCSV format is supported for earthquake files
 # Note: A temporary fix to deal with  SSL issue
 
 if not ssl_available:
-    earthquakeCatalogDict = {'%s//service.iris.edu/fdsnws/event/1/query' % HTTP_PROTOCOL:
+    earthquakeCatalogDict = {f'{HTTP_PROTOCOL}//service.iris.edu/fdsnws/event/1/query':
                              'IRIS DMC FDSNWS event Web Service'}
     earthquakeQuery = ("format=text&starttime=%s&endtime=%s&minmag=%0.1f&maxmag=%0.1f&"""
                        "orderby=time-asc&mindepth=%0.1f&"""
                        "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 else:
-    earthquakeCatalogDict = {'%s//earthquake.usgs.gov/fdsnws/event/1/query' % HTTP_PROTOCOL:
-                                 'USGS Earthquake Hazards Program'}
+    earthquakeCatalogDict = {f'{HTTP_PROTOCOL}//earthquake.usgs.gov/fdsnws/event/1/query':
+                             'USGS Earthquake Hazards Program'}
     earthquakeQuery = ("format=text&starttime=%s&endtime=%s&minmag=%0.1f&maxmag=%0.1f&"""
                        "orderby=time-asc&mindepth=%0.1f&"""
                        "maxdepth=%0.1f&minlat=%0.2f&maxlat=%0.2f&minlon=%0.2f&maxlon=%0.2f&nodata=404")
 
 # sort the earthquake dictionary based on the values (organization)
-(earthquakeKeys, earthquakeValues) = sortDictByValue(earthquakeCatalogDict)
+(earthquakeKeys, earthquakeValues) = sort_dict_by_value(earthquakeCatalogDict)
 
 # Paths
 topDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -120,23 +122,23 @@ pathDict = {'EMC_MAIN_PATH': topDir,
             'EMC_EARTHQUAKES_PATH': os.path.join(topDir, 'data', 'earthquakes'),
             'EMC_EQ_ANIMATION_PATH': os.path.join(topDir, 'data', 'earthquakes', 'animation')}
 
-for key in pathDict.keys():
+for key in list(pathDict.keys()):
     utils.makePath(pathDict[key])
 
-# default files
-# NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
-#       '' is used to flag the need for update
+"""Default files.
+   NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
+         '' is used to flag the need for update"""
 filesExtDict = {'ssl': '.nc', 'geo': '.csv'}
 filesDict = {'EMC_DEFAULT_MODEL': 'wUS-SH-2010_percent', 'EMC_DEFAULT_2DMODEL': 'CAM2016Litho',
              'EMC_DEFAULT_VOLCANO': 'WOVOdat_volcano_locations.csv'}
 
-# default column names for GeoCSV files. User can redefine these in the GeoCSV header
+# Default column names for GeoCSV files. User can redefine these in the GeoCSV header.
 columnKeys = {'latitude_column': 'latitude', 'longitude_column': 'longitude', 'depth_column': 'depth',
               'elevation_column': 'elevation', 'magnitude_column': 'magnitude', 'time_column': 'time'}
 
-# USGS Slab 1.0 files, will populate the drop down menu
-# NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
-#       '' is used to flag the need for update
+""" USGS Slab 1.0 files, will populate the drop down menu.
+    NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
+          '' is used to flag the need for update"""
 grd_ext = ''
 usgsSlabExtDict = {'ssl': '.grd', 'geo': '.csv'}
 usgsSlabDict = {'alu_slab1.0_clip%s' % grd_ext: 'Alaska-Aleutians',
@@ -152,10 +154,10 @@ usgsSlabDict = {'alu_slab1.0_clip%s' % grd_ext: 'Alaska-Aleutians',
                 'sol_slab1.0_clip%s' % grd_ext: 'Solomon Islands',
                 'van_slab1.0_clip%s' % grd_ext: 'Santa Cruz Islands/Vanuatu/Loyalty Islands'}
 
-# sort the SLAB dictionary based on the values (regions)
-(usgsSlabKeys, usgsSlabValues) = sortDictByValue(usgsSlabDict)
+# Sort the SLAB dictionary based on the values (regions).
+(usgsSlabKeys, usgsSlabValues) = sort_dict_by_value(usgsSlabDict)
 
-# extent of the slab regions
+# Extent of the slab regions.
 usgsSlabRangeDict = {'alu_slab1.0_clip%s' % grd_ext: {'X': (167., 216), 'Y': (50., 65.), 'Z': (-278.8, -6.264)},
                      'cas_slab1.0_clip%s' % grd_ext: {'X': (-128.5, -120.5), 'Y': (39., 52.), 'Z': (100.18, -4.99)},
                      'izu_slab1.0_clip%s' % grd_ext: {'X': (129., 148.), 'Y': (11., 40.), 'Z': (-686.764, -1.002)},
@@ -169,7 +171,7 @@ usgsSlabRangeDict = {'alu_slab1.0_clip%s' % grd_ext: {'X': (167., 216), 'Y': (50
                      'sol_slab1.0_clip%s' % grd_ext: {'X': (145., 165.), 'Y': (-12., -2.), 'Z': (-616.65, -1.81)},
                      'van_slab1.0_clip%s' % grd_ext: {'X': (164., 173.), 'Y': (-23.5, -9.), 'Z': (-331.3, -3.89)}}
 
-# Area
+# Areas.
 areaDict = {'0': 'Africa',
             '1': 'Americas',
             '2': 'Asia',
@@ -181,10 +183,10 @@ areaDict = {'0': 'Africa',
             '8': 'USA',
             '9': 'World'}
 
-# sort the Area dictionary based on the values (regions)
-(areaKeys, areaValues) = sortDictByValue(areaDict)
+# Sort the Area dictionary based on the values (regions).
+(areaKeys, areaValues) = sort_dict_by_value(areaDict)
 
-# extent of the areas
+# Extent of the areas.
 areaRangeDict = {'0': {'lat': (-35., 40.), 'lon': (-20, 55)},
                  '1': {'lat': (-60., 80.), 'lon': (-170., -30.)},
                  '2': {'lat': (0., 80.), 'lon': (55., 179.9)},
@@ -196,7 +198,7 @@ areaRangeDict = {'0': {'lat': (-35., 40.), 'lon': (-20, 55)},
                  '8': {'lat': (25., 57.), 'lon': (-125., -66.5)},
                  '9': {'lat': (-90., 90.), 'lon': (-180., 180.)}}
 
-# Boundary files that will appear in the drop down menu
+# Boundary files that will appear in the drop down menu.
 boundariesDict = {'coastline_data_int.csv': 'Coastline data: intermediate resolution',
                   'coastline_data_low.csv': 'Coastline data: low resolution',
                   'coastline_data_very_low.csv': 'Coastline data: very low resolution',
@@ -212,12 +214,12 @@ boundariesColor= {'coastline_data_int.csv': '1,1,1',
                   'plate_boundaries_transform.csv': '1.0, 0.0, 0.0',
                   'plate_boundaries_convergent.csv': '1.0, 1.0, 0.0'}
 
-# sorted list of the boundary files based on values
-(boundaryKeys, boundaryValues) = sortDictByValue(boundariesDict)
+# Sorted list of the boundary files based on values.
+(boundaryKeys, boundaryValues) = sort_dict_by_value(boundariesDict)
 
-# Boundary files that will appear in the drop down menu
-# NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
-#       '' is used to flag the need for update
+"""Boundary files that will appear in the drop down menu
+NOTE: to make sure scipy is available under pvpython, we need to set the extension at run time
+      '' is used to flag the need for update"""
 grd_ext = ''
 topoExtDict = {'ssl': '.nc', 'geo': '.csv'}
 topoDict = {'GMTED2010_15n240_1000deg_dmc%s' % grd_ext: 'GMTED2010 elevation data: 1.000 degrees resolution',
@@ -225,4 +227,4 @@ topoDict = {'GMTED2010_15n240_1000deg_dmc%s' % grd_ext: 'GMTED2010 elevation dat
             'GMTED2010_15n060_0250deg_dmc%s' % grd_ext: 'GMTED2010 elevation data: 0.250 degrees resolution'}
 
 # sorted list of the topo files based on values
-(topoKeys, topoValues) = sortDictByValue(topoDict)
+(topoKeys, topoValues) = sort_dict_by_value(topoDict)
