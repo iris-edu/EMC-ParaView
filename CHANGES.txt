@@ -11,19 +11,24 @@ COMMENTS/QUESTIONS:
 ---------------------------------------------------------
 
 =========================================================
-2019-05-13 R.1.5.6.4
+2021-10-03 r2.0.0 Python 3
+=========================================================
+- Python 3 release
+
+=========================================================
+2019-05-13 r1.5.6.4
 =========================================================
 - documents/IRIS_DS_SSA_2019.pdf added V.2019.091 Developing and Visualizing Community Seismic Velocity Models Workshop
 
 =========================================================
-2019-04-22 R.1.5.6.3
+2019-04-22 r1.5.6.3
 =========================================================
 - readers/read_2d_models.py   V.2019.112 Variable "File_name" renamed.
 - readers/read_3d_models.py   V.2019.112 PEP8 style update.
 
 
 =========================================================
-2019-04-17 R.1.5.6.2
+2019-04-17 r1.5.6.2
 =========================================================
 
 - documents/IRIS_EMC_ParaView_Plugins_Exercise_2_Model.pdf V.2019.091 corrected the inverted latitude begin/end
@@ -34,7 +39,7 @@ COMMENTS/QUESTIONS:
                                                            that was preventing correct data export in some cases
 
 =========================================================
-2019-03-26 R.1.5.6.1
+2019-03-26 r1.5.6.1
 =========================================================
 - readers/read_3d_models.py   2019.079 added support for model file names without extension
 - readers/read_2d_models.py   2019.079 added support for model file names without extension
@@ -44,14 +49,14 @@ COMMENTS/QUESTIONS:
 - documents/IRIS_EMC_ParaView_Plugins_Exercise_2_Model.pdf V.2019.091 added
 
 =========================================================
-2019-03-01 R.1.5.6
+2019-03-01 r1.5.6
 =========================================================
 - IrisEMC_Paraview_Lib.py     V.2019.059 added missing_value support to read_netcdf_model
 - readers/read_3d_models.py   V.2019.060 added the exception error to output message
 - readers/read_2d_models.py   V.2019.060 added the exception error to output message
 
 =========================================================
-2019-01-30 R.1.5.5
+2019-01-30 r1.5.5
 =========================================================
 - readers/read_earthquakes.py V.2019.031 now produces animation frame files for both single frame and accumulative modes
 - documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.031 Updated earthquake animation section to include both
@@ -61,7 +66,7 @@ COMMENTS/QUESTIONS:
                                                                     single frame video
 
 =========================================================
-2019-01-30 R.1.5.4
+2019-01-30 r1.5.4
 =========================================================
 - documents/IRIS_EMC_ParaView_Plugins_Guide.pdf V.2019.030 Added
 - documents/2015-09-16_NEAR_COAST_OF_CENTRAL_CHILE_09-14_09626.mov V.2019.030 Added
@@ -77,7 +82,7 @@ COMMENTS/QUESTIONS:
 - IrisEMC_Paraview_Utils      V.2019.022 added datetime_to_int, datetime_to_float, remove_files
 
 =========================================================
-2019-01-14 R.1.5.3
+2019-01-14 r1.5.3
 =========================================================
 - IrisEMC_Paraview_Lib.py now gets the default volcano data from IRIS EMC file repository that is a curated
                           WOVOdate data
@@ -87,23 +92,23 @@ COMMENTS/QUESTIONS:
 
 
 =========================================================
-2018-12-21 R.1.5.2
+2018-12-21 r1.5.2
 =========================================================
 - readers/read_earthquakes.py now applies earthquake parameters to the local files too
 
 =========================================================
-2018-12-20 R.1.5.2
+2018-12-20 r1.5.2
 =========================================================
 - filters/filter_view_coordinates.py corrected the bug that would prevent it from outputting data values
 
 =========================================================
-2018-12-18 R.1.5.2
+2018-12-18 r1.5.2
 =========================================================
 - filters/filter_view_coordinates.py now outputs the grid coordiantes as lat, lon and depth
 - IrisEMC_Paraview_Lib.py  updated xyz2llz since it was returning longitude in radians and not degrees
 
 =========================================================
-2018-12-13 R.1.5.1
+2018-12-13 r1.5.1
 =========================================================
 - IrisEMC_Paraview_Lib.py CSV file is now uses open rU to open for input as a text file with universal newline
                               interpretation.
@@ -114,14 +119,14 @@ COMMENTS/QUESTIONS:
 - readers/read_etopo.py modified the logic to accept any file extension for GeoCSV files
 - readers/read_usgs_slab.py style update
 =========================================================
-2018-12-12 R.1.5.1
+2018-12-12 r1.5.1
 =========================================================
 readers/read_usgs_slabs.py and src/IrisEMC_Paraview_Lib.py - resolved an issue were for GeoCSV files a
         factor of zero was included that would mask the slab depth
 readers/read_earthquakes.py - made depth a scalar so it could be used for color scale
 
 =========================================================
-2018-12-06 R.1.5.0
+2018-12-06 r1.5.0
 =========================================================
 
 Public release supporting OS X, Linux and Windows platforms. Works with both
@@ -129,7 +134,7 @@ Public release supporting OS X, Linux and Windows platforms. Works with both
 
 
 =========================================================
-2018-06-11 R.1.0.0
+2018-06-11 r1.0.0
 =========================================================
 
 Version 1.0 Public release
