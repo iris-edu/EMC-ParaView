@@ -81,14 +81,14 @@ def RequestData():
         (lat, lon, this_depth) = lib.xyz2llz(point[0], point[1], point[2])
         data_points.InsertNextPoint((lat, lon, this_depth))
         key = "%0.2f" % this_depth
-        if key not in latitude.keys():
+        if key not in list(latitude.keys()):
             latitude[key] = []
             longitude[key] = []
             value[key] = []
 
         # need to control precision to have a reasonable sort order
         # note that these coordinates are recomputed
-        if key not in depth.keys():
+        if key not in list(depth.keys()):
             depth[key] = float('%0.4f' % this_depth)
         latitude[key].append(float('%0.4f' % lat))
         longitude[key].append(float('%0.4f' % lon))
@@ -115,14 +115,14 @@ def RequestData():
         val_data.append(vtk.vtkFloatArray())
         val_data[j].SetName('value(%s)' % pdi.GetPointData().GetArray(j).GetName())
 
-    depth_keys = latitude.keys()
+    depth_keys = list(latitude.keys())
 
     for i in range(len(depth_keys)):
         depth_key = depth_keys[i]
         lon_list = longitude[depth_key]
         lat_list = latitude[depth_key]
         val_list = value[depth_key]
-        point_list = zip(lat_list, lon_list, val_list)
+        point_list = list(zip(lat_list, lon_list, val_list))
         point_list.sort(key=itemgetter(0, 1))
 
         for index, data in enumerate(point_list):
