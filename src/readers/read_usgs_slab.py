@@ -57,7 +57,7 @@ def RequestData():
     from os.path import splitext
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
-    import urlparse
+    import urllib.parse
     import IrisEMC_Paraview_Utils as utils
     import IrisEMC_Paraview_Param as param
 
@@ -71,7 +71,7 @@ def RequestData():
 
     FileName = FileName.strip()
     ext = None
-    if FileName in param.usgsSlabDict.keys():
+    if FileName in list(param.usgsSlabDict.keys()):
         if utils.support_nc():
             ext = param.usgsSlabExtDict['ssl']
         else:
@@ -126,7 +126,7 @@ def RequestData():
     # make geometry
     #
     count = 0
-    for var in V.keys():
+    for var in list(V.keys()):
         scalars = vtk.vtkFloatArray()
         scalars.SetNumberOfComponents(1)
         scalars.SetName(var)
@@ -175,7 +175,7 @@ def RequestData():
         data.SetName('Source')
         data.InsertNextValue(lib.usgsSlab_URL)
         Label = ' '.join(['USGS Slab 1.0:', lib.usgsSlabValues[Slab].strip(), 'from',
-                          urlparse.urlparse(lib.usgsSlab_URL).netloc.strip()])
+                          urllib.parse.urlparse(lib.usgsSlab_URL).netloc.strip()])
         data.InsertNextValue(lib.usgsSlabKeys[Slab])
         fieldData.AddArray(data)
 
@@ -201,7 +201,7 @@ def RequestInformation():
 
     FileName = FileName.strip()
     ext = None
-    if FileName in param.usgsSlabDict.keys():
+    if FileName in list(param.usgsSlabDict.keys()):
         if utils.support_nc():
             ext = param.usgsSlabExtDict['ssl']
         else:
