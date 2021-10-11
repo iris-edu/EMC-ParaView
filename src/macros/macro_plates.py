@@ -1,10 +1,9 @@
-# trace generated using paraview version 5.6.0-RC2
-#
-# To ensure correct image size when batch processing, please search 
-# for and uncomment the line `# renderView*.ViewSize = [*,*]`
-
-#### import the simple module from the paraview
 from paraview.simple import *
+
+"""Trace generated using paraview version 5.6.0-RC2
+ To ensure correct image size when batch processing, please search 
+ for and uncomment the line `# renderView*.ViewSize = [*,*]`
+"""
 #### disable automatic camera reset on 'Show'
 paraview.simple._DisableFirstRenderCameraReset()
 
