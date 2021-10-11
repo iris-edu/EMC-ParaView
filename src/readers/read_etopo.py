@@ -79,7 +79,7 @@ def RequestData():
 
     file_name = file_name.strip()
     ext = None
-    if file_name in param.topoDict.keys():
+    if file_name in list(param.topoDict.keys()):
         if utils.support_nc():
             ext = param.topoExtDict['ssl']
         else:
@@ -140,7 +140,7 @@ def RequestData():
     # make geometry
     #
     count = 0
-    for var in V.keys():
+    for var in list(V.keys()):
         scalars = vtk.vtkFloatArray()
         scalars.SetNumberOfComponents(1)
         scalars.SetName(var)
@@ -191,7 +191,7 @@ def RequestInformation():
 
     file_name = file_name.strip()
     ext = None
-    if file_name in param.topoDict.keys():
+    if file_name in list(param.topoDict.keys()):
         if utils.support_nc():
             ext = param.topoExtDict['ssl']
         else:
