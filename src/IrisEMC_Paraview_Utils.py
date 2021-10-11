@@ -1,8 +1,15 @@
+import os
+import glob
+import platform
+import numpy as np
+import datetime
+from time import time
+
 """NAME: IrisEMC_Paraview-Utils.py - library of various functions in support of EMC
 
        http://ds.iris.edu/ds/products/emc-earthmodels/
 
- Copyright (C) 2018  Product Team, IRIS Data Management Center
+ Copyright (C) 2021  Product Team, IRIS Data Management Center
 
     This is a free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -20,23 +27,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  History:
-    2019-01-30 Manoch: V.2019.030 datetime_to_float now accepts date with or without time
-    2019-01-22 Manoch: V.2019.022 added datetime_to_int, datetime_to_float, remove_files
-    2018-11-12 Manoch: V.2018.316 added check_system to check OS
-    2018-10-17 Manoch: V.2018.290 updates for R1
-    2018-09-13 Manoch: V.2018.256 updated the isValueIn to ensure values are float
-    2018-03-21 Manoch: V.2018.080 release for ParaView support
+    2021-10-03 Manoch: v.2021.276 Python 3 r2 and correction to datetime_to_int making sure the output is an integer.
+    2019-01-30 Manoch: v.2019.030 datetime_to_float now accepts date with or without time
+    2019-01-22 Manoch: v.2019.022 added datetime_to_int, datetime_to_float, remove_files
+    2018-11-12 Manoch: v.2018.316 added check_system to check OS
+    2018-10-17 Manoch: v.2018.290 updates for R1
+    2018-09-13 Manoch: v.2018.256 updated the isValueIn to ensure values are float
+    2018-03-21 Manoch: v.2018.080 release for ParaView support
     2015-06-08 Manoch: updated the parameter file message based on the changes
                in the main script
     2015-01-17 Manoch: created
 """
-
-import os
-import glob
-import platform
-import numpy as np
-import datetime
-from time import time
 
 
 def remove_files(pattern):
@@ -88,7 +89,7 @@ def datetime_to_int(d, level='month'):
     int_value = 0
     for i in range(switch_index + 1):
         int_value += int(items[i]) * pow(100, len(switcher) - i - 1)
-    return int_value / pow(100, len(switcher) - switch_index - 1)
+    return int(int_value / pow(100, len(switcher) - switch_index - 1))
 
 
 def do_https():
@@ -350,7 +351,7 @@ def getLons(lon_start, lon_end, inc):
         lon_list: longitude list
     """
 
-    # move to 0-360 to avoid zero crossing and 180 crossing issues
+    # Move to 0-360 to avoid zero crossing and 180 crossing issues.
     lon = lon_start - inc
     lon_list = []
     if lonStart < lonEnd:
@@ -380,9 +381,9 @@ def makePath(directory):
         thisPath --- the path if exists
     """
 
-    # the path must be an absolute path (start with "/")
+    # The path must be an absolute path (start with "/").
     if not os.path.isabs(directory):
-        print ('ERR [checkMakePath]: pat must be an absolute path')
+        print('ERR [checkMakePath]: pat must be an absolute path')
         return None
 
     # create directories
@@ -405,10 +406,10 @@ def error(message, code=1, sender=None):
     """
     line = "\n" + 100 * "*" + "\n"
     if sender:
-        lab = "[ERROR from " + sender + "]"
+        lab = f"[ERROR from {sender}]"
     else:
-        lab = "[ERROR]"
-    print (line, lab, message, line)
+        lab = "[ERR]"
+    print(ine, lab, message, line)
     return code
 
 
@@ -425,9 +426,9 @@ def isLatValid(value, sender=None):
     """
     if abs(float(value)) > 90.0:
         if sender:
-            error(sender + ": Bad latitude (" + str(value) + "), must be between +/-90.0", 1)
+            error(f"{sender}: Bad latitude ({value}), must be between +/-90.0", 1)
         else:
-            error("Bad latitude (" + str(value) + "), must be between +/-90.0", 1)
+            error(f"Bad latitude ({value}), must be between +/-90.0", 1)
         return False
     else:
         return True
@@ -446,9 +447,9 @@ def isLonValid(value, sender=None):
       """
     if abs(float(value)) > 180.0:
         if sender:
-            error(sender + ": Bad longitude (" + str(value) + "), must be between +/-180.0", 1)
+            error(f"{sender}  Bad longitude ({value}), must be between +/-180.0", 1)
         else:
-            error("Bad longitude (" + str(value) + "), must be between +/-180.0", 1)
+            error(f"Bad longitude ({value}), must be between +/-180.0", 1)
         return False
     else:
         return True
@@ -470,8 +471,8 @@ def warning(message, sender=None):
     if sender:
         code = "[WARNING from " + sender + "]"
     else:
-        code = "[WARNING]"
-    print (code, message, line)
+        code = "[WARN]"
+    print(code, message, line)
 
 
 def usage(script, paramPath):
@@ -480,15 +481,9 @@ def usage(script, paramPath):
                script: sending script
                paramPath: path to the parameter file
     """
-    print ("\n\nUSAGE:\n\n")
-    print ("%50s\n" % "user defined parameter file name")
-    print ("%40s\n" % "|")
-    print ("%10s %20s %10s\n" % ("python", script, "paramFile"))
-    print (" ")
-    print ("\n\nNOTE:\n\n")
-    print (" The shared parameter file, 'common.par', must reside under:", paramPath)
-    print (" ")
-    print ("\n\n\n\n")
+    print(f"\n\nUSAGE:\n\npython {script} parameterfile"
+          f"(user defined parameter file name)\n"
+          f"\n\nNOTE:\n\n\the shared parameter file, 'common.par', must reside under: {paramPath}\n\n")
 
 
 def timeIt(new, who, t0):
@@ -503,5 +498,5 @@ def timeIt(new, who, t0):
     dt = t1 - t0
     t = t0
     line = 50 * '.'
-    print ("%s%s\n[TIME] %s %0.5f s\n%s\n" % (new, line, who, dt, line))
+    print(f"{new}{line}\n[TIME] {who} {dt:0.5f} s\n%{line}\n")
 
