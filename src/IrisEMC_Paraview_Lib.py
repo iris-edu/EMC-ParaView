@@ -1,3 +1,18 @@
+import sys
+import os
+from paraview.simple import *
+import IrisEMC_Paraview_Param as param
+import IrisEMC_Paraview_Utils as utils
+from datetime import datetime
+import urllib.parse
+import urllib.request
+import urllib.error
+from datetime import datetime
+from scipy.io import netcdf
+import numpy as np
+import math
+from operator import itemgetter
+
 """
  NAME: IrisEMC_Paraview-Lib.py - EMC ParaView scripts mmain library
 
@@ -5,7 +20,7 @@
 
  DESCRIPTION: Thefunctions in this library are for support of EMC ParaView Python scripts
 
- Copyright (C) 2018  Product Team, IRIS Data Management Center
+ Copyright (C) 2021  Product Team, IRIS Data Management Center
 
     This is a free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,72 +38,68 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  HISTORY:
-    2019-04-17 Manoch: V.2019.107 corrected a statement spacing in read_geocsv_model_2d and read_geocsv_model_3d
+ 
+    2021-10-03 Manoch: v.2021.276 Python 3 r2
+
+    2019-04-17 Manoch: v.2019.107 corrected a statement spacing in read_geocsv_model_2d and read_geocsv_model_3d
                        that was preventing correct data export in some cases
-    2019-03-01 Manoch: V.2019.060 added missing_value support to read_netcdf_model, read_geocsv_model_2d and
+    2019-03-01 Manoch: v.2019.060 added missing_value support to read_netcdf_model, read_geocsv_model_2d and
                        read_geocsv_model_3d
-    2019-01-14 Manoch: V.2019.014 now gets the default volcano data from IRIS EMC file repository that is a curated
+    2019-01-14 Manoch: v.2019.014 now gets the default volcano data from IRIS EMC file repository that is a curated
                        WOVOdate data
-    2018-12-18 Manoch: V.2018.355 updated xyz2llz since it was returning longitude in radians and not degrees
-    2018-12-17 Manoch: V.2018.354 CSV file is now uses open rU to open for input as a text file with universal
+    2018-12-18 Manoch: v.2018.355 updated xyz2llz since it was returning longitude in radians and not degrees
+    2018-12-17 Manoch: v.2018.354 CSV file is now uses open rU to open for input as a text file with universal
                        (corrected typo)
-    2018-12-13 Manoch: V.2018.347 CSV file is now uses open rU to open for input as a text file with universal
+    2018-12-13 Manoch: v.2018.347 CSV file is now uses open rU to open for input as a text file with universal
                        newline interpretation. We are now using splitlines() to regardless of line ending
                        Fixed the issue with GeoCSV slab legend that displayed negative depths.
-    2018-12-12 Manoch: V.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
+    2018-12-12 Manoch: v.2018.346 resolved an issue were for GeoCSV files a factor of zero was included that
                        would mask the slab depth
-    2018-12-06 Manoch: V.2018.340 R1 release supports OS X, Linux, and Windows
+    2018-12-06 Manoch: v.2018.340 R1 release supports OS X, Linux, and Windows
     2018-11-12 Manoch: now find_file checks the OS to make sure .nc files are not requested on Windows platform
-    2018-10-17 Manoch: V.2018.290 updates for R1
-    2018-09-13 Manoch: V.2018.256 added support for 3D geoCSV files
-    2018-05-09 Manoch: V.2018.129 added support for 2D netCDF files
-    2018-04-30 Manoch: V.2018.120 modified query2file_name to accepth optional url argument
+    2018-10-17 Manoch: v.2018.290 updates for R1
+    2018-09-13 Manoch: v.2018.256 added support for 3D geoCSV files
+    2018-05-09 Manoch: v.2018.129 added support for 2D netCDF files
+    2018-04-30 Manoch: v.2018.120 modified query2file_name to accepth optional url argument
                        and add a simplified version of it to the begining of the file name.
                        This would allow the code to distinguish between files created from
                        two different sites but using the same query
-    2018-04-23 Manoch: V.2018.113 update lat and lon loops logic to avoid gaps at region
+    2018-04-23 Manoch: v.2018.113 update lat and lon loops logic to avoid gaps at region
                        boundaries due to selected step (inc)
-    2018-03-21 Manoch: V.2018.080 release
+    2018-03-21 Manoch: v.2018.080 release
 """
 
-import sys
-import os
-from paraview.simple import *
-import IrisEMC_Paraview_Param as param
-import IrisEMC_Paraview_Utils as utils
-
-# parameters
+# Parameters.
 depthFactor = 1
 irisEMC_Files_URL = param.irisEMC_Files_URL
-usgsSlab_URL = param.usgsSlab_URL
 pathDict = param.pathDict
 columnKeys = param.columnKeys
 filesDict = param.filesDict
 
-# USGS Slab 1.0
+# USGS Slab 1.0.
 usgsSlab_URL = param.usgsSlab_URL
 usgsSlabDict = param.usgsSlabDict
 usgsSlabKeys = param.usgsSlabKeys
 usgsSlabValues = param.usgsSlabValues
 usgsSlabRangeDict = param.usgsSlabRangeDict
 
-# boundaries
+# Boundaries.
 boundariesDict = param.boundariesDict
 boundaryKeys = param.boundaryKeys
 boundaryValues = param.boundaryValues
 
-# topo
+# Topo.
 topoDict = param.topoDict
 topoKeys = param.topoKeys
 topoValues = param.topoValues
 
-# areas
+# Areas.
 areaDict = param.areaDict
 areaRangeDict = param.areaRangeDict
 areaKeys = param.areaKeys
 areaValues = param.areaValues
 
-# earthquake catalogs
+# Earthquake catalogs.
 earthquakeCatalogDict = param.earthquakeCatalogDict
 earthquakeQuery = param.earthquakeQuery
 earthquakeKeys = param.earthquakeKeys
@@ -202,19 +213,19 @@ def get_area(area, latitude_begin, latitude_end, longitude_begin, longitude_end)
 
     try:
         lat0 = float(latitude_begin)
-    except:
+    except Exception as ex:
         pass
     try:
         lat1 = float(latitude_end)
-    except:
+    except Exception as ex:
         pass
     try:
         lon0 = float(longitude_begin)
-    except:
+    except Exception as ex:
         pass
     try:
         lon1 = float(longitude_end)
-    except:
+    except Exception as ex:
         pass
 
     return lat0, lat1, lon0, lon1
@@ -232,13 +243,13 @@ def eq_header(url):
     header = ("# dataset: GeoCSV 2.0\n"
               "# title: Earthquake catalog\n"
               "# source: " + url + "\n"
-              "# delimiter: |\n"
-              "# latitude_column: Latitude\n"
-              "# longitude_column: Longitude\n"
-              "# depth_column: Depth/km\n"
-              "# magnitude_column: Magnitude\n"
-              "EventID|Time|Latitude|Longitude|Depth/km|Author|Catalog|Contributor|ContributorID"
-              "|MagType|Magnitude|MagAuthor|EventLocationName\n")
+                                   "# delimiter: |\n"
+                                   "# latitude_column: Latitude\n"
+                                   "# longitude_column: Longitude\n"
+                                   "# depth_column: Depth/km\n"
+                                   "# magnitude_column: Magnitude\n"
+                                   "EventID|Time|Latitude|Longitude|Depth/km|Author|Catalog|Contributor|ContributorID"
+                                   "|MagType|Magnitude|MagAuthor|EventLocationName\n")
     return header
 
 
@@ -251,8 +262,6 @@ def wovo_header(url):
     Return values:
     header: GeoCSV file header
     """
-    from datetime import datetime
-
     header = ("# title: Volcano Locations\n"
               "# source: %s\n"
               "# created: %s UTC\n"
@@ -274,7 +283,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     Return values:
     boolean: a flag  indicating if the two values are close
     """
-    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
 def read_geocsv(gfile_name, is_2d=False):
@@ -288,9 +297,9 @@ def read_geocsv(gfile_name, is_2d=False):
     params: a dictionary of the key-value pairs found in the header
     data: a text block of the body
     """
-    # open the CSV file
+    # Open the CSV file:
     # rU: open for input as a text file with universal newline interpretation
-    fp = open(gfile_name, 'rU')
+    fp = open(gfile_name, 'rU', encoding='utf-8')
     content = fp.read()
     lines = content.splitlines()
     fp.close()
@@ -299,14 +308,14 @@ def read_geocsv(gfile_name, is_2d=False):
     found_header = False
     for i in range(len(lines)):
         if len(lines[i].strip()) <= 0:
-                continue
+            continue
         elif lines[i].strip().startswith('#'):
             this_line = lines[i].strip()[1:]
             if len(this_line.strip()) <= 0:
                 continue
             values = this_line.split(':')
             key = values[0].strip()
-            params[key] = this_line.replace(key+':', '').strip()
+            params[key] = this_line.replace(key + ':', '').strip()
         else:
             # the first data line is the header
             this_line = lines[i].strip()
@@ -316,17 +325,17 @@ def read_geocsv(gfile_name, is_2d=False):
                 continue
             data.append(this_line)
 
-    # set the default columns
-    if 'latitude_column' not in params.keys():
+    # Set the default columns.
+    if 'latitude_column' not in list(params.keys()):
         params['latitude_column'] = 'latitude'
-    if 'longitude_column' not in params.keys():
+    if 'longitude_column' not in list(params.keys()):
         params['longitude_column'] = 'longitude'
     if not is_2d:
-        if 'elevation_column' not in params.keys():
+        if 'elevation_column' not in list(params.keys()):
             params['elevation_column'] = 'elevation'
-        if 'depth_column' not in params.keys():
+        if 'depth_column' not in list(params.keys()):
             params['depth_column'] = 'depth'
-        
+
     return params, data
 
 
@@ -357,16 +366,15 @@ def read_info_file(data_file):
     info_file = os.path.splitext(data_file)[0] + '.inf'
     origin = file_name(data_file)
     if os.path.isfile(info_file):
-            fp = open(info_file, 'r')
-            lines = fp.read().splitlines()
-            fp.close()
-            origin = data_file
-            for line in lines:
-                if 'source:' in line:
-                    origin = line.replace('source:', '')[1:].strip()
-                    import urlparse
-                    origin = urlparse.urlparse(origin).netloc
-                    break
+        fp = open(info_file, 'r')
+        lines = fp.read().splitlines()
+        fp.close()
+        origin = data_file
+        for line in lines:
+            if 'source:' in line:
+                origin = line.replace('source:', '')[1:].strip()
+                origin = urllib.parse.urlparse(origin).netloc
+                break
     return origin
 
 
@@ -379,10 +387,9 @@ def query2filename(query, url=''):
     Return values:
     filename: the file name without path
     """
-    import urlparse
 
     if len(url) > 0:
-        urlinfo = urlparse.urlparse(url)
+        urlinfo = urllib.parse.urlparse(url)
         site = urlinfo[1]
         query = '_'.join([site, query])
     filename = query.replace("&", '').replace("=", "").replace(".", '').replace("formattext", "")
@@ -401,9 +408,8 @@ def is_url_valid(url):
     Return values:
     bool: a flag indicating if the  URL is reachable
     """
-    import urllib
 
-    conn = urllib.urlopen(url)
+    conn = urllib.request.urlopen(url)
     code = conn.getcode()
     if code == 200:
         return True
@@ -425,17 +431,13 @@ def get_file_from_url(url, path, filename=''):
     url: URL where the file came from (se to destination if not retrieved)
     """
 
-    import urllib
-    import urlparse
-    from datetime import datetime
-
     try:
         if len(filename.strip()) <= 0:
-            url_info = urlparse.urlparse(url)
+            url_info = urllib.parse.urlparse(url)
             filename = url_info[2].strip()
             filename = os.path.basename(filename)
         destination = os.path.join(path, filename)
-        urllib.urlretrieve(url, destination)
+        urllib.request.urlretrieve(url, destination)
         if os.path.isfile(destination):
             info_file = os.path.splitext(destination)[0] + '.inf'
             fp = open(info_file, 'w')
@@ -444,7 +446,7 @@ def get_file_from_url(url, path, filename=''):
             fp.write('# source: %s\n' % url)
             fp.close()
             return True, destination, url
-    except:
+    except Exception as ex:
         pass
     url = destination
     return False, destination, url
@@ -463,26 +465,23 @@ def find_file(address, loc, query='', ext=None):
     address: full address of the local file
     source: where the file came from
     """
-    import urllib
 
     found = False
 
-    # for default files, the calling script sends the proper extension to use depending on the OS support
+    # For default files, the calling script sends the proper extension to use depending on the OS support.
     if ext is not None:
         address = ''.join([address, ext])
     if address.lower().endswith('.nc') and not utils.support_nc():
-        print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
+        print("[ERR] Cannot read netCDF files on this platform, try GeoCSV format!")
         return False, address, address
-    elif address.lower().endswith('.nc'):
-        from scipy.io import netcdf
 
-    # it is a full path to a file?
+    # It is a full path to a file?
     source = address
     if os.path.isfile(address):
         origin = read_info_file(source)
         return True, address, origin
 
-    # it is a file under the data directory?
+    # It is a file under the data directory?
     elif os.path.isfile(os.path.join(loc, address)):
         source = os.path.join(loc, address)
         origin = read_info_file(source)
@@ -490,7 +489,7 @@ def find_file(address, loc, query='', ext=None):
 
     # Other possibilities, URL?
     else:
-        # check the DMC URL
+        # Check the DMC URL.
         if loc in (pathDict['EMC_BOUNDARIES_PATH'], pathDict['EMC_MODELS_PATH'], pathDict['EMC_VOLCANOES_PATH']):
             source = irisEMC_Files_URL + address
             if is_url_valid(source):
@@ -502,7 +501,7 @@ def find_file(address, loc, query='', ext=None):
             if is_url_valid(source):
                 found, destination, origin = get_file_from_url(source, loc, filename=os.path.join(loc, address))
 
-        # earthquakes
+        # Earthquakes.
         elif loc == pathDict['EMC_EARTHQUAKES_PATH']:
             source = query
             if is_url_valid(source):
@@ -515,11 +514,11 @@ def find_file(address, loc, query='', ext=None):
                     fp.write(catalog)
                     fp.close()
 
-        # did we find the file?
+        # Did we find the file?
         if found:
             return found, destination, origin
 
-        # did user provide a URL
+        # Did user provide a URL.
         else:
             found, destination, origin = get_file_from_url(address, loc, query)
             return found, destination, origin
@@ -556,7 +555,6 @@ def llz2xyz(lat, lon, depth):
     y: y-coordinate  normalized to the radius of Earh
     z: z-coordinate  normalized to the radius of Earh
     """
-    import numpy as np
 
     alt = -1.0 * 1000.0 * depth  # height above WGS84 ellipsoid (m)
     lat = np.deg2rad(lat)
@@ -601,8 +599,6 @@ def xyz2llz(x, y, z):
      lon: longitude (deg)
      depth: depth (km)
     """
-    import numpy as np
-    import math
 
     # World Geodetic System 1984, WGS 84
     erad = np.float64(6378137.0)  # Radius of the Earth in meters (equatorial radius, WGS84)
@@ -666,9 +662,6 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, in
      """
 
     # model data and metadata
-    import numpy as np
-    from operator import itemgetter
-
     (params, lines) = read_geocsv(model_file)
 
     # model data
@@ -682,7 +675,7 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, in
     lon_variable = params['longitude_column']
     elev_variable = params['elevation_column']
     variables = []
-    for this_param in params.keys():
+    for this_param in list(params.keys()):
         if params[this_param] not in (depth_variable, lon_variable, lat_variable, elev_variable
                                       ) and '_column' in this_param:
             variables.append(params[this_param])
@@ -789,7 +782,7 @@ def read_geocsv_model_3d(model_file, ll, ur, depth_min, depth_max, roughness, in
             Z[ii, jj, kk] = z
 
             for l, var_val in enumerate(variables):
-                if var_val not in V.keys():
+                if var_val not in list(V.keys()):
                     V[var_val] = np.zeros((nx, ny, nz))
                     V[var_val][:] = np.nan
                 if '_'.join([var_val, 'missing_value']) in params:
@@ -820,18 +813,16 @@ def read_netcdf_model(model_file, lat_variable, lon_variable, depth_variable, ll
       meta: file metadata information
     """
 
-    import numpy as np
     # ParaView on some platforms does not have SciPy module
     if not utils.support_nc():
-        print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
+        print("[ERR] Cannot read netCDF files on this platform, try GeoCSV format!")
         return [], [], [], [], {}
-    elif model_file.lower().endswith('.nc'):
-        from scipy.io import netcdf
 
     # NetCDF files, when opened read-only, return arrays that refer directly to memory-mapped data on disk:
+    print(f"[INFO] Reading model file {model_file}")
     data = netcdf.netcdf_file(model_file, 'r')
     variables = []
-    for name in data.variables.keys():
+    for name in list(data.variables.keys()):
         if name not in (depth_variable, lon_variable, lat_variable):
             variables.append(name)
 
@@ -934,8 +925,6 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
      """
 
     # model data and metadata
-    import numpy as np
-    from operator import itemgetter
 
     (params, lines) = read_geocsv(model_file, is_2d=True)
 
@@ -947,7 +936,7 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
 
     # model variables
     variables = []
-    for this_param in params.keys():
+    for this_param in list(params.keys()):
         if params[this_param] not in (params['longitude_column'], params['latitude_column']
                                       ) and '_column' in this_param:
             variables.append(params[this_param])
@@ -1021,7 +1010,7 @@ def read_geocsv_model_2d(model_file, ll, ur, inc, roughness, unit_factor=1, base
                 Y[ii, jj, kk] = y
                 Z[ii, jj, kk] = z
 
-                if var_val not in V.keys():
+                if var_val not in list(V.keys()):
                     V[var_val] = np.zeros((nx, ny, nz))
                     V[var_val][:] = np.nan
                 if '_'.join([var_val, 'missing_value']) in params:
@@ -1054,19 +1043,15 @@ def read_2d_netcdf_file(model_file, lat_variable, lon_variable, variable, ll, ur
       meta: file metadata information
     """
 
-    import numpy as np
-
     # ParaView on some platforms does not have SciPy module
     if not utils.support_nc:
-        print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
+        print("[ERR] Cannot read netCDF files on this platform, try GeoCSV format!")
         return [], [], [], [], {}
-    elif model_file.lower().endswith('.nc'):
-        from scipy.io import netcdf
 
     # NetCDF files, when opened read-only, return arrays that refer directly to memory-mapped data on disk:
     data = netcdf.netcdf_file(model_file, 'r')
     variables = []
-    for name in data.variables.keys():
+    for name in list(data.variables.keys()):
         if name not in (lon_variable, lat_variable):
             variables.append(name)
 
@@ -1170,14 +1155,11 @@ def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, lon_var='longitude
     label: file label
     """
 
-    import numpy as np
     # ParaView on some platforms does not have SciPy module
 
     if not utils.support_nc():
-        print "[ERROR] Sorry, cannot read netCDF files on this platform!"
+        print("[ERR] Sorry, cannot read netCDF files on this platform!")
         return 0, 0, 0
-    elif model_file.lower().endswith('.nc'):
-        from scipy.io import netcdf
 
     z_variable = elev_var
     lon_variable = lon_var
@@ -1222,7 +1204,6 @@ def read_netcdf_topo_file(model_file, ll, ur, inc, roughness, lon_var='longitude
             for j, depth_val in enumerate(dep):
                 for k, lat_val in enumerate(lat):
                     if lon_val in longitude and lat_val in latitude and depth_val in depth2:
-
                         ii = longitude.index(lon_val)
                         jj = depth2.index(depth_val)
                         kk = latitude.index(lat_val)
@@ -1255,13 +1236,10 @@ def read_slab_file(model_file, ll, ur, inc=1, depth_factor=-1, extent=False):
     label: file label
     """
 
-    import numpy as np
     # ParaView on some systems does not have SciPy module
     if not utils.support_nc():
-        print "[ERROR] Cannot read netCDF files on this platform, try GeoCSV format!"
+        print("[ERR] Cannot read netCDF files on this platform, try GeoCSV format!")
         return [], [], [], [], ''
-    elif model_file.lower().endswith('.nc') or model_file.lower().endswith('.grd'):
-        from scipy.io import netcdf
 
     z_variable = 'z'
     lon_variable = 'x'
@@ -1317,5 +1295,6 @@ def read_slab_file(model_file, ll, ur, inc=1, depth_factor=-1, extent=False):
 
     V[z_variable] = v
     return X, Y, Z, V, label
+
 
 
