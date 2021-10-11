@@ -1,36 +1,41 @@
-#
-# Credits:
-#
-#  Credit for this code goes to Bane Sullivan (http://banesullivan.com/)
-#  the code was obtained from:
-#       https://github.com/banesullivan/ParaViewGeophysics
-#
-#  The original code was modified based on the IRIS EMC ParaView requirements
-#
-# From the original code:
-#
-#     See blog for details: https://blog.kitware.com/easy-customization-of-the-paraview-python-programmable-filter-property-panel/
-#     This code has been heavily modified by Bane Sullivan (banesullivan@gmail.com) for making customized filters in the geoscience data visualization. 
-#     Credit does not go to Bane for this script but to the author of the above blog post.
-#     Acknowledgements:
-#         Daan van Vugt <daanvanvugt@gmail.com> for file series implementation
-#             https://github.com/Exteris/paraview-python-file-reader
-#         Pat Marion (see blog post url above) for the foundation of this script
-#
-# History:
-#
-#   2019-01-14 Manoch: V.2019.014 support for volcano data from EMC file repository
-#   2018-03-21 Manoch: V.2018.080
-#   2018-02-28 Manoch: adopted to EMC ParaView support and added option of replacing keyword in the XML body before writing it to the file
-#   2018-01-20 Manoch: original code by Bane Sullivan from https://github.com/banesullivan/ParaViewGeophysics
-#
-
-
 import os
 import sys
 import inspect
 import textwrap
 import IrisEMC_Paraview_Param as param
+"""
+
+ Credits:
+
+  Credit for this code goes to Bane Sullivan (http://banesullivan.com/)
+  the code was obtained from:
+       https://github.com/banesullivan/ParaViewGeophysics
+
+  The original code was modified based on the IRIS EMC ParaView requirements
+
+ From the original code:
+
+     See blog for details: 
+     https://blog.kitware.com/easy-customization-of-the-paraview-python-programmable-filter-property-panel/
+     This code has been heavily modified by Bane Sullivan (banesullivan@gmail.com) for making customized filters in 
+     the geoscience data visualization. Credit does not go to Bane for this script but to the author of the above 
+     blog post.
+     Acknowledgements:
+         Daan van Vugt <daanvanvugt@gmail.com> for file series implementation
+             https://github.com/Exteris/paraview-python-file-reader
+         Pat Marion (see blog post url above) for the foundation of this script
+
+ History:
+   2021-10-03 Manoch: v.2021.276 Python 3 release r2
+   2019-01-14 Manoch: V.2019.014 support for volcano data from EMC file repository
+   2018-03-21 Manoch: V.2018.080
+   2018-02-28 Manoch: adopted to EMC ParaView support and added option of replacing keyword in the XML body 
+                      before writing it to the file
+   2018-01-20 Manoch: original code by Bane Sullivan from https://github.com/banesullivan/ParaViewGeophysics
+
+"""
+
+
 
 def escapeForXmlAttribute(s):
 
@@ -59,28 +64,28 @@ def getScriptPropertiesXml(info):
     requestUpdateExtent = e(info['RequestUpdateExtent'])
 
     if requestData:
-        requestData = '''
+        requestData = f'''
       <StringVectorProperty
         name="Script"
         command="SetScript"
         number_of_elements="1"
-        default_values="%s"
+        default_values="{requestData}"
         panel_visibility="advanced">
         <Hints>
          <Widget type="multi_line" syntax="python"/>
        </Hints>
       <Documentation>This property contains the text of a python program that
       the programmable source runs.</Documentation>
-      </StringVectorProperty>''' % requestData
+      </StringVectorProperty>'''
 
     if requestInformation:
-        requestInformation = '''
+        requestInformation = f'''
       <StringVectorProperty
         name="InformationScript"
         label="RequestInformation Script"
         command="SetInformationScript"
         number_of_elements="1"
-        default_values="%s"
+        default_values="{requestInformation}"
         panel_visibility="advanced">
         <Hints>
           <Widget type="multi_line" syntax="python"/>
@@ -88,24 +93,24 @@ def getScriptPropertiesXml(info):
         <Documentation>This property is a python script that is executed during
         the RequestInformation pipeline pass. Use this to provide information
         such as WHOLE_EXTENT to the pipeline downstream.</Documentation>
-      </StringVectorProperty>''' % requestInformation
+      </StringVectorProperty>'''
 
     if requestUpdateExtent:
-        requestUpdateExtent = '''
-      <StringVectorProperty
-        name="UpdateExtentScript"
-        label="RequestUpdateExtent Script"
-        command="SetUpdateExtentScript"
-        number_of_elements="1"
-        default_values="%s"
-        panel_visibility="advanced">
-        <Hints>
-          <Widget type="multi_line" syntax="python"/>
-        </Hints>
-        <Documentation>This property is a python script that is executed during
-        the RequestUpdateExtent pipeline pass. Use this to modify the update
-        extent that your filter ask up stream for.</Documentation>
-      </StringVectorProperty>''' % requestUpdateExtent
+        requestUpdateExtent = f'''
+        <StringVectorProperty
+          name="UpdateExtentScript"
+          label="RequestUpdateExtent Script"
+          command="SetUpdateExtentScript"
+          number_of_elements="1"
+          default_values="{requestUpdateExtent}"
+          panel_visibility="advanced">
+          <Hints>
+            <Widget type="multi_line" syntax="python"/>
+          </Hints>
+          <Documentation>This property is a python script that is executed during
+          the RequestUpdateExtent pipeline pass. Use this to modify the update
+          extent that your filter ask up stream for.</Documentation>
+        </StringVectorProperty>'''
 
     return '\n'.join([requestData, requestInformation, requestUpdateExtent])
 
@@ -154,77 +159,77 @@ def getFilterPropertyXml(propertyInfo, propertyName, propertyHelpInfo):
 
         defaultValues = defaultValues.replace('True', '1').replace('False', '0')
 
-        return '''
+        return f'''
       <IntVectorProperty
-        panel_visibility="%s"
-        name="%s"
-        label="%s"
-        initial_string="%s"
+        panel_visibility="{vis}"
+        name="{propertyName}"
+        label="{propertyLabel}"
+        initial_string="{propertyName}"
         command="SetParameter"
         animateable="1"
-        default_values="%s"
-        number_of_elements="%s">
+        default_values="{defaultValues}"
+        number_of_elements="{numberOfElements}">
         <BooleanDomain name="bool" />
-        <Documentation>%s</Documentation>
-      </IntVectorProperty>''' % (vis, propertyName, propertyLabel, propertyName, defaultValues, numberOfElements, propertyHelp)
+        <Documentation>{propertyHelp}</Documentation>
+      </IntVectorProperty>'''
 
 
     if propertyType is int:
-        return '''
+        return f'''
       <IntVectorProperty
-        panel_visibility="%s"
-        name="%s"
-        label="%s"
-        initial_string="%s"
+        panel_visibility="{vis}"
+        name="{propertyName}"
+        label="{propertyLabel}"
+        initial_string="{propertyName}"
         command="SetParameter"
         animateable="1"
-        default_values="%s"
-        number_of_elements="%s">
-        <Documentation>%s</Documentation>
-      </IntVectorProperty>''' % (vis, propertyName, propertyLabel, propertyName, defaultValues, numberOfElements, propertyHelp)
+        default_values="{defaultValues}"
+        number_of_elements="{numberOfElements}">
+        <Documentation>{propertyHelp}</Documentation>
+      </IntVectorProperty>'''
 
     if propertyType is float:
-        return '''
+        return f'''
       <DoubleVectorProperty
-        panel_visibility="%s"
-        name="%s"
-        label="%s"
-        initial_string="%s"
+        panel_visibility="{vis}"
+        name="{propertyName}"
+        label="{propertyLabel}"
+        initial_string="{propertyName}"
         command="SetParameter"
         animateable="1"
-        default_values="%s"
-        number_of_elements="%s">
-        <Documentation>%s</Documentation>
-      </DoubleVectorProperty>''' % (vis, propertyName, propertyLabel, propertyName, defaultValues, numberOfElements, propertyHelp)
+        default_values="{defaultValues}"
+        number_of_elements="{numberOfElements}">
+        <Documentation>{propertyHelp}</Documentation>
+      </DoubleVectorProperty>'''
 
     if propertyType is str:
         if 'FileName' in propertyName:
-            return '''
+            return f'''
           <StringVectorProperty
-            panel_visibility="%s"
-            name="%s"
-            label="%s"
-            initial_string="%s"
+            panel_visibility="{vis}"
+            name="{propertyName}"
+            label="{propertyLabel}"
+            initial_string="{propertyName}"
             command="SetParameter"
             animateable="1"
-            default_values="%s"
-            number_of_elements="%s">
+            default_values="{defaultValues}"
+            number_of_elements="{numberOfElements}">
             <FileListDomain name="files"/>
-            <Documentation>%s</Documentation>
-          </StringVectorProperty>''' % (vis, propertyName, propertyLabel, propertyName, defaultValues, numberOfElements, propertyHelp)
+            <Documentation>{propertyHelp}</Documentation>
+          </StringVectorProperty>'''
         else:
-            return '''
+            return f'''
             <StringVectorProperty
-            panel_visibility="%s"
-            name="%s"
-            label="%s"
-            initial_string="%s"
+            panel_visibility="{vis}"
+            name="{propertyName}"
+            label="{propertyLabel}"
+            initial_string="{propertyName}"
             command="SetParameter"
             animateable="1"
-            default_values="%s"
-            number_of_elements="%s">
-            <Documentation>%s</Documentation>
-            </StringVectorProperty>''' % (vis, propertyName, propertyLabel, propertyName, defaultValues, numberOfElements, propertyHelp)
+            default_values="{defaultValues}"
+            number_of_elements="{numberOfElements}">
+            <Documentation>{propertyHelp}</Documentation>
+            </StringVectorProperty>'''
 
     raise Exception('Unknown property type: %r' % propertyType)
 
@@ -252,10 +257,10 @@ def getInputPropertyXml(info):
 
     inputDataTypeDomain = ''
     if inputDataType:
-        inputDataTypeDomain = '''
+        inputDataTypeDomain = f'''
           <DataTypeDomain name="input_type">
-            <DataType value="%s"/>
-          </DataTypeDomain>''' % inputDataType
+            <DataType value="{inputDataType}"/>
+          </DataTypeDomain>'''
 
     inputPropertyAttributes = 'command="SetInputConnection"'
     if numberOfInputs > 1:
@@ -264,16 +269,16 @@ def getInputPropertyXml(info):
             command="AddInputConnection"
             multiple_input="1"'''
 
-    inputPropertyXml = '''
+    inputPropertyXml = f'''
       <InputProperty
         name="Input"
-        %s>
+        {inputPropertyAttributes}>
           <ProxyGroupDomain name="groups">
             <Group name="sources"/>
             <Group name="filters"/>
           </ProxyGroupDomain>
-          %s
-      </InputProperty>''' % (inputPropertyAttributes, inputDataTypeDomain)
+          {inputDataTypeDomain}
+      </InputProperty>'''
 
     return inputPropertyXml
 
@@ -311,16 +316,16 @@ def getOutputDataSetTypeXml(info):
 
     typeValue = typeMap[outputDataType]
 
-    return '''
-      <!-- Output data type: "%s" -->
+    return f'''
+      <!-- Output data type: "{outputDataType}  or 'Same as input'" -->
       <IntVectorProperty command="SetOutputDataSetType"
-                         default_values="%s"
+                         default_values="{typeValue}"
                          name="OutputDataSetType"
                          number_of_elements="1"
                          panel_visibility="never">
         <Documentation>The value of this property determines the dataset type
         for the output of the programmable filter.</Documentation>
-      </IntVectorProperty>''' % (outputDataType or 'Same as input', typeValue)
+      </IntVectorProperty>'''
 
 
 def getProxyGroup(info):
@@ -347,38 +352,36 @@ def generatePythonFilter(info):
     filterGroup = getFilterGroup(info)
 
 
-    outputXml = '''\
+    outputXml = f'''\
 <ServerManagerConfiguration>
-  <ProxyGroup name="%s">
-    <SourceProxy name="%s" class="vtkPythonProgrammableFilter" label="%s">
+  <ProxyGroup name="{proxyGroup}">
+    <SourceProxy name="{proxyName}" class="vtkPythonProgrammableFilter" label="{proxyLabel}">
       <Documentation
-        long_help="%s"
-        short_help="%s">
+        long_help="{longHelp}"
+        short_help="{shortHelp}">
       </Documentation>
-%s
-%s
-%s
-%s
-%s
-%s
+{filterGroup}
+{extraXml}
+{inputPropertyXml}
+{filterProperties}
+{outputDataSetType}
+{scriptProperties}
     </SourceProxy>
  </ProxyGroup>
 </ServerManagerConfiguration>
-      ''' % (proxyGroup, proxyName, proxyLabel, longHelp, shortHelp,
-                filterGroup, extraXml, inputPropertyXml,
-                filterProperties, outputDataSetType, scriptProperties)
-
+      '''
     return textwrap.dedent(outputXml)
+
 
 def getFilterGroup(info):
     if "FilterCategory" not in info:
         return ''
     else:
-        return ('''\
+        return (f'''\
         <Hints>
-            <ShowInMenu category="%s" />
+            <ShowInMenu category="{info['FilterCategory']}" />
         </Hints>
-        ''' % info["FilterCategory"])
+        ''')
 
 
 def replaceFunctionWithSourceString(namespace, functionName, allowEmpty=False):
@@ -389,15 +392,15 @@ def replaceFunctionWithSourceString(namespace, functionName, allowEmpty=False):
             namespace[functionName] = ''
             return
         else:
-            raise Exception('Function %s not found in input source code.' % functionName)
+            raise Exception(f'Function {functionName} not found in input source code.')
 
     if not inspect.isfunction(func):
-        raise Exception('Object %s is not a function object.' % functionName)
+        raise Exception(f'Object {functionName} is not a function object.')
 
     lines = inspect.getsourcelines(func)[0]
 
     if len(lines) <= 1:
-        raise Exception('Function %s must not be a single line of code.' % functionName)
+        raise Exception(f'Function {functionName} must not be a single line of code.')
 
     # skip first line (the declaration) and then dedent the source code
     sourceCode = textwrap.dedent(''.join(lines[1:]))
@@ -408,7 +411,7 @@ def replaceFunctionWithSourceString(namespace, functionName, allowEmpty=False):
 def generatePythonFilterFromFiles(scriptFile, outputFile):
     
     namespace = {}
-    execfile(scriptFile, namespace)
+    exec(compile(open(scriptFile, "rb").read(), scriptFile, 'exec'), namespace)
 
     replaceFunctionWithSourceString(namespace, 'RequestData')
     replaceFunctionWithSourceString(namespace, 'RequestInformation', allowEmpty=True)
@@ -428,17 +431,17 @@ def generatePythonFilterFromFiles(scriptFile, outputFile):
 
     topoDropDownItems = ""
     for i in range(len(param.topoKeys)):
-        topoDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.topoValues[i])
+        topoDropDownItems += f'<Entry value="{i}" text="{param.topoValues[i]}/>\n'
 
     areaDropDownItems = ""
     for i in range(len(param.areaKeys)):
-        areaDropDownItems += '<Entry value="%i" text="%s"/>\n' % (i, param.areaValues[i])
+        areaDropDownItems += f'<Entry value="{i}" text="{param.areaValues[i]}"/>\n'
 
     xmlOutput = generatePythonFilter(namespace)
-    for key in param.pathDict.keys():
+    for key in list(param.pathDict.keys()):
        xmlOutput = xmlOutput.replace(key+'/',param.pathDict[key]+os.sep)
        xmlOutput = xmlOutput.replace(key,param.pathDict[key])
-    for key in param.filesDict.keys():
+    for key in list(param.filesDict.keys()):
        xmlOutput = xmlOutput.replace(key+'/',param.filesDict[key]+os.sep)
        xmlOutput = xmlOutput.replace(key,param.filesDict[key])
 
@@ -457,17 +460,16 @@ def generatePythonFilterFromFiles(scriptFile, outputFile):
     if 'AREA_DROP_DOWN' in xmlOutput:
         xmlOutput = xmlOutput.replace('AREA_DROP_DOWN', areaDropDownItems)
 
-    for key in param.filesDict.keys():
+    for key in list(param.filesDict.keys()):
         xmlOutput = xmlOutput.replace(key,param.filesDict[key])
-     
-     
+
     open(outputFile, 'w').write(xmlOutput)
 
 
 def main():
 
     if len(sys.argv) != 3:
-        print('Usage: %s <python input filename> <xml output filename>' % sys.argv[0])
+        print(f'Usage: {sys.argv[0]} <python input filename> <xml output filename>')
         sys.exit(1)
 
     inputScript = sys.argv[1]
