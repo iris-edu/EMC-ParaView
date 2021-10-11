@@ -54,7 +54,7 @@ def RequestData():
     import os
     sys.path.insert(0, r'EMC_SRC_PATH')
     import IrisEMC_Paraview_Lib as lib
-    import urlparse
+    import urllib.parse
 
     if len(Alternate_FileName.strip()) > 0:
          FileName = Alternate_FileName.strip()
@@ -86,16 +86,16 @@ def RequestData():
     Boundary_Elevation = float(Depth_Bias)
 
     column_keys = lib.columnKeys
-    for key in lib.columnKeys.keys():
-        if key in params.keys():
+    for key in list(lib.columnKeys.keys()):
+        if key in list(params.keys()):
             column_keys[key] = params[key].strip()
     delimiter = params['delimiter'].strip()
     gaps = params['gaps'].strip()
     latIndex = 0
     lonIndex = 1
-    if 'source' in params.keys():
+    if 'source' in list(params.keys()):
         try:
-           netloc = urlparse.urlparse(params['source']).netloc
+           netloc = urllib.parse.urlparse(params['source']).netloc
         except:
            netloc = params['source']
 
