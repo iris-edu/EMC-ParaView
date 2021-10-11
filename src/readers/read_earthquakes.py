@@ -67,7 +67,7 @@ def RequestData():
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as Lib
     import IrisEMC_Paraview_Utils as Utils
-    import urlparse
+    import urllib.parse
 
     pts = vtk.vtkPoints()
     Latitude_Begin, Latitude_End, Longitude_Begin, Longitude_End = Lib.get_area(Area, Latitude_Begin, Latitude_End,
@@ -95,17 +95,17 @@ def RequestData():
 
     pdo = self.GetOutput()  # vtkPoints
     column_keys = Lib.columnKeys
-    for key in Lib.columnKeys.keys():
-        if key in params.keys():
+    for key in list(Lib.columnKeys.keys()):
+        if key in list(params.keys()):
             column_keys[key] = params[key]
 
     origin = None
     if 'source' in params:
         origin = params['source']
-        this_label = urlparse.urlparse(origin).netloc
+        this_label = urllib.parse.urlparse(origin).netloc
     else:
         try:
-            this_label = urlparse.urlparse(Alternate_FileName).netloc
+            this_label = urllib.parse.urlparse(Alternate_FileName).netloc
         except:
             this_label = Alternate_FileName
 
@@ -190,7 +190,7 @@ def RequestData():
     # save animation frames
     if frame_tag:
         Utils.remove_files(os.path.join('EMC_EQ_ANIMATION_PATH', '%s_*.txt') % frame_tag)
-        key_list = [int(x) for x in frame.keys()]
+        key_list = [int(x) for x in list(frame.keys())]
         key_list.sort()
         key0 = key_list[0]
         eq_list = 'X,Y,Z,Depth,Mag,Year-Month'
