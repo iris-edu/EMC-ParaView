@@ -42,7 +42,7 @@ def RequestData():
     import os
     from vtk.util import numpy_support as nps
     import IrisEMC_Paraview_Lib as lib
-    import urlparse
+    import urllib.parse
 
     Label = ''
 
@@ -71,8 +71,8 @@ def RequestData():
     lon_index = 1
 
     column_keys = lib.columnKeys
-    for key in lib.columnKeys.keys():
-        if key in params.keys():
+    for key in list(lib.columnKeys.keys()):
+        if key in list(params.keys()):
             column_keys[key] = params[key]
 
     delimiter = params['delimiter'].strip()
