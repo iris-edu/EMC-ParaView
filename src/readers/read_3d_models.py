@@ -56,7 +56,7 @@ def RequestData():
 
     File_name = File_name.strip()
     ext = None
-    if File_name in param.filesDict.values() or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
+    if File_name in list(param.filesDict.values()) or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
                                                      File_name.lower().endswith(param.filesExtDict['geo'].lower())):
         if utils.support_nc():
             ext = param.filesExtDict['ssl']
@@ -118,7 +118,7 @@ def RequestData():
 
     # make geometry
     count = 0
-    for var in V.keys():
+    for var in list(V.keys()):
         scalars = vtk.vtkFloatArray()
         scalars.SetNumberOfComponents(1)
         scalars.SetName(var)
@@ -182,7 +182,7 @@ def RequestInformation():
     depth_end = float(Depth_end)
     File_name = File_name.strip()
     ext = None
-    if File_name in param.filesDict.values() or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
+    if File_name in list(param.filesDict.values()) or not (File_name.lower().endswith(param.filesExtDict['ssl'].lower()) or
                                                      File_name.lower().endswith(param.filesExtDict['geo'].lower())):
         if utils.support_nc():
             ext = param.filesExtDict['ssl']
